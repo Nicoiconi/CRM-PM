@@ -3,8 +3,7 @@ import { Schema, model, models } from "mongoose"
 const MatchSchema = new Schema({
   userClerkId: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   status: {
     type: String,
@@ -22,6 +21,7 @@ const MatchSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "CategoriesSchema"
   },
+  profit: Number,
   description: String,
   disable: {
     type: Boolean,

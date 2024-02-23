@@ -3,8 +3,7 @@ import { Schema, model, models } from "mongoose"
 const BuyerSchema = new Schema({
   userClerkId: {
     type: String,
-    required: true,
-    unique: true,
+    required: true
   },
   name: {
     type: String,

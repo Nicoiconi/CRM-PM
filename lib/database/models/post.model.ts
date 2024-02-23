@@ -3,8 +3,7 @@ import { Schema, model, models } from "mongoose"
 const PostSchema = new Schema({
   userClerkId: {
     type: String,
-    required: true,
-    unique: true,
+    required: true
   },
   seller: {
     type: Schema.Types.ObjectId,
