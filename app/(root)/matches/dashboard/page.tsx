@@ -1,11 +1,12 @@
 "use client"
 
-import BuyersDashboard from './components/BuyersDashboard/BuyersDashboard'
+import MatchesDashboard from "./components/MatchesDashboard/MatchesDashboard"
 
-export default function BuyersDashboardPage() {
+
+export default function MatchesDashboardPage() {
   return (
     <div>
-      <BuyersDashboard />
+      <MatchesDashboard />
     </div>
   )
 }
