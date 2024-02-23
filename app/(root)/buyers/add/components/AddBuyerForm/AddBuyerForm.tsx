@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { useDispatch, useSelector } from "react-redux"
 import { setAllBuyers } from "@/lib/redux/slices/buyersSlice/buyersSlice"
 import { redirect } from "next/navigation"
+import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
 export default function AddBuyerForm() {
 
@@ -30,11 +31,20 @@ export default function AddBuyerForm() {
 
   const handleSubmitForm: SubmitHandler<CreateClientParams> = async buyerData => {
     try {
-      const createdBuyer = await createBuyer(buyerData)
-      console.log(createdBuyer)
-      if (createdBuyer && createdBuyer?._id) {
-        dispatch(setAllBuyers([...allBuyers, createdBuyer]))
-        setExecuteRedirect(true)
+      const existingName = allBuyers?.find(d => d?.name?.toLowerCase().trim() === buyerData?.name?.toLowerCase().trim())
+      const existingEmail = allBuyers?.find(d => d?.email?.toLowerCase().trim() === buyerData?.email?.toLowerCase().trim())
+      if (existingName) {
+        dispatch(setFooterMessage({ message: `Name ${existingName?.name} already in use.`, status: 409 }))
+      } else if (existingEmail) {
+        dispatch(setFooterMessage({ message: `Email ${existingEmail?.email} already in use.`, status: 409 }))
+      } else {
+        const createdBuyer = await createBuyer(buyerData)
+        if (createdBuyer && createdBuyer?._id) {
+          const allBuyersCopy = structuredClone(allBuyers || [])
+          dispatch(setAllBuyers([...allBuyersCopy, createdBuyer]))
+          dispatch(setFooterMessage({ message: `Buyer ${createdBuyer?.name} created`, status: 200 }))
+          setExecuteRedirect(true)
+        }
       }
     } catch (error) {
       console.log(error)

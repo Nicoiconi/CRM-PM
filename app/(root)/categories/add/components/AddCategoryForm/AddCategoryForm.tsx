@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { useDispatch, useSelector } from "react-redux"
 import { setAllCategories } from "@/lib/redux/slices/categoriesSlice/categoriesSlice"
 import { redirect } from "next/navigation"
+import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
 export default function AddCategoryForm() {
 
@@ -30,10 +31,17 @@ export default function AddCategoryForm() {
 
   const handleSubmitForm: SubmitHandler<CreateClientParams> = async categoryData => {
     try {
-      const createdCategory = await createCategory(categoryData)
-      if (createdCategory && createdCategory?._id) {
-        dispatch(setAllCategories([...allCategories, createdCategory]))
-        setExecuteRedirect(true)
+      const existingName = allCategories?.find(c => c?.name?.toLowerCase().trim() === categoryData?.name?.toLowerCase().trim())
+      if (existingName) {
+        dispatch(setFooterMessage({ message: `Name ${existingName?.name} already in use.`, status: 409 }))
+      } else {
+        const createdCategory = await createCategory(categoryData)
+        if (createdCategory && createdCategory?._id) {
+          const allCategoriesCopy = structuredClone(allCategories || [])
+          dispatch(setAllCategories([...allCategoriesCopy, createdCategory]))
+          dispatch(setFooterMessage({ message: `Category ${createdCategory?.name} created`, status: 200 }))
+          setExecuteRedirect(true)
+        }
       }
     } catch (error) {
       console.log(error)
