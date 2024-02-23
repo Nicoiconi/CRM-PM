@@ -2,12 +2,12 @@ import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 
 import { IconArrowNarrowDown, IconArrowNarrowUp, IconRefresh } from "@tabler/icons-react"
-import BuyerTableRow from "../BuyerTableRow/BuyerTableRow"
-import BuyersInput from "../BuyersInput/BuyersInput"
+import BuyerTableRow from "../MatchTableRow/MatchTableRow"
+import BuyersInput from "../MatchesInput/MatchesInput"
 import { getAllBuyers } from "@/lib/actions/buyer.actions"
 import { setAllBuyers } from "@/lib/redux/slices/buyersSlice/buyersSlice"
 
-export default function BuyersDashboard() {
+export default function MatchesDashboard() {
 
   const dispatch = useDispatch()
 

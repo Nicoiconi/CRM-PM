@@ -20,10 +20,10 @@ interface BuyerToRender {
   created_at: string
 }
 
-export default function BuyerTableRow({ buyer }: Props) {
+export default function MatchTableRow({ buyer }: Props) {
 
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
-  const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.matches)
+  const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
 
   const [buyerData, setBuyerData] = useState<BuyerToRender>()
 

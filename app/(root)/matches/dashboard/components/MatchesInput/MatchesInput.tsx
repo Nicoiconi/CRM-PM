@@ -7,7 +7,7 @@ interface Props {
   handleFilter: (value: string) => void
 }
 
-export default function BuyersInput({ handleFilter }: Props) {
+export default function MatchesInput({ handleFilter }: Props) {
 
   const { allBuyers }: { allBuyers: Client[] } = useSelector((state: Store) => state.buyers)
 
