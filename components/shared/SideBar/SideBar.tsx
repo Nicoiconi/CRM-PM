@@ -1,12 +1,11 @@
 "use client"
 
 import { Button } from "@/components/ui/button";
-import { navLinks } from "@/constants";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ThemeSwitch from "../ThemeSwitch/ThemeSwitch";
+import FooterButton from "./FooterButton/FooterButton";
 
 export default function SideBar() {
 
@@ -47,6 +46,20 @@ export default function SideBar() {
               </Link>
 
               <Link
+                href="/categories/dashboard"
+                className={`sidebar-nav_element p-2 ${pathname === "categories" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+              >
+                Categories
+              </Link>
+
+              <Link
+                href="/posts/dashboard"
+                className={`sidebar-nav_element p-2 ${pathname === "posts" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+              >
+                Posts
+              </Link>
+
+              <Link
                 href="/matches/dashboard"
                 className={`sidebar-nav_element p-2 ${pathname === "matches" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
               >
@@ -55,6 +68,8 @@ export default function SideBar() {
             </div>
 
             <div className="sidebar-nav_elements">
+              <FooterButton />
+
               <Link
                 href="/profile"
                 className={`sidebar-nav_element p-2 ${pathname === "matches" ? "bg-purple-gradient text-white" : "text-gray-700"}`}

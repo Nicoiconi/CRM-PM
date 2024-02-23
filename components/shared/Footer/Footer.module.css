@@ -1,0 +1,26 @@
+.footer {
+  /* position: fixed; */
+  /* left: 16px;
+  bottom: 16px; */
+  text-align: left;
+  padding: 8px 13px 8px 10px;
+  border-radius: 32px;
+  /* opacity: 0.95; */
+  /* backdrop-filter: blur(8px); */
+}
+
+.respuestaValida {
+  color: rgb(109, 238, 109);
+}
+
+.respuestaErrorServidor {
+  color: rgb(185, 4, 4);
+}
+
+.respuestaIdentica {
+  color: rgb(55, 133, 185);
+}
+
+.respuestaErrorSolicitud {
+  color: rgb(243, 178, 124);
+}
