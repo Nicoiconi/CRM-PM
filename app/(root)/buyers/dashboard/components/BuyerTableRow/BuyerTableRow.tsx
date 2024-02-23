@@ -1,9 +1,13 @@
+"use client"
+
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import Link from "next/link"
 
 import { IconExternalLink } from "@tabler/icons-react"
 import { getBuyerById } from "@/lib/actions/buyer.actions"
+import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
+import { setBuyerById } from "@/lib/redux/slices/buyersSlice/buyersSlice"
 
 interface Props {
   buyer: Client
@@ -23,6 +27,8 @@ interface BuyerToRender {
 
 export default function BuyerTableRow({ buyer }: Props) {
 
+  const dispatch = useDispatch()
+
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
 
@@ -41,7 +47,7 @@ export default function BuyerTableRow({ buyer }: Props) {
 
 
     setBuyerData({
-      _id: `...${buyer?._id?.slice(-7)}`,
+      _id: buyer?._id,
       name: buyer?.name,
       categories: uniqueCategoriesLength,
       posts: buyer?.posts?.length,
@@ -54,22 +60,31 @@ export default function BuyerTableRow({ buyer }: Props) {
     })
   }, [buyer])
 
-  function handleSetById() {
-    getBuyerById(buyer?._id)
-  }
+  // async function handleSetById() {
+  //   const singleBuyerSelected = await getBuyerById(buyer?._id)
+  //   if (singleBuyerSelected) {
+  //     const { message, status, object } = singleBuyerSelected
+  //     if (status === 200) {
+  //       dispatch(setFooterMessage({ message, status }))
+  //       dispatch(setBuyerById(singleBuyerSelected))
+  //       return
+  //     }
+  //   }
+  //   dispatch(setFooterMessage({ message: "Get Buyer failed", status: 409 }))
+  // }
 
   return (
     <tr className="border text-[20px]">
       <td>
         <Link
-          onClick={() => handleSetById()}
-          href="/buyers/search-buyers"
+          // onClick={() => handleSetById()}
+          href={`/buyers/dashboard/${buyerData?._id}`}
         >
           <IconExternalLink className="m-1" />
         </Link>
       </td>
       <td className="py-1 px-2 overflow-hidden whitespace-nowrap">
-        {buyerData?._id}
+        {`...${buyer?._id?.slice(-7)}`}
       </td>
       <td className="py-1 px-2">
         {buyerData?.name}

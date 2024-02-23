@@ -21,7 +21,7 @@ interface CategoryToRender {
 export default function CategoryTableRow({ category }: Props) {
 
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
-  const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.matches)
+  const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
 
   const [categoryData, setCategoryData] = useState<CategoryToRender>()
 

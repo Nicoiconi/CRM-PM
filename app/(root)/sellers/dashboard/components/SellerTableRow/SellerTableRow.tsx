@@ -24,7 +24,7 @@ interface SellerToRender {
 export default function SellerTableRow({ seller }: Props) {
 
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
-  const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.matches)
+  const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
 
   const [sellerData, setSellerData] = useState<SellerToRender>()
 
