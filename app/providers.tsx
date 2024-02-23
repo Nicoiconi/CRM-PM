@@ -1,5 +1,6 @@
 "use client"
 
+import ReduxProvider from "@/lib/redux/ReduxProvider"
 import { ThemeProvider } from "next-themes"
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -7,6 +8,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     attribute="class"
     defaultTheme="system"
   >
-    {children}
+    <ReduxProvider>
+      {children}
+    </ReduxProvider>
   </ThemeProvider>
 }

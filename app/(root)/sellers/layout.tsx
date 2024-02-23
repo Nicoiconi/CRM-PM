@@ -1,5 +1,4 @@
 import NavButton from "@/components/shared/NavButton/NavButton";
-import ReduxProvider from "@/lib/redux/ReduxProvider";
 
 export default function SellersLayout({ children }: { children: React.ReactNode }) {
   return (

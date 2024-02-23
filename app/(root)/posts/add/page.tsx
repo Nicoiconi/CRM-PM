@@ -1,14 +1,11 @@
 "use client"
 
-import AddBuyerForm from './components/AddBuyerForm/AddBuyerForm'
-import ReduxProvider from '@/lib/redux/ReduxProvider'
+import AddBuyerForm from './components/AddPostForm/AddPostForm'
 
 export default function AddBuyerPage() {
   return (
     <div>
-      <ReduxProvider>
-        <AddBuyerForm />
-      </ReduxProvider>
+      <AddBuyerForm />
     </div>
   )
 }

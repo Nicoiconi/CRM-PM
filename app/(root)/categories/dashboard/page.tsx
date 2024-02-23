@@ -1,17 +1,11 @@
 "use client"
 
-import ReduxProvider from '@/lib/redux/ReduxProvider'
-
+import CategoriesDashboard from './components/CategoriesDashboard/CategoriesDashboard'
 
 export default function CategoriesDashboardPage() {
-
   return (
     <div>
-
-      <ReduxProvider>
-        <CategoriesDashboard />
-      </ReduxProvider>
-
+      <CategoriesDashboard />
     </div>
   )
 }
