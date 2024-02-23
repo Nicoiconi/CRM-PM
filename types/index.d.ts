@@ -60,9 +60,8 @@ declare type Category = {
 
 // Post Params
 declare type CreatePostParams = {
-  userClerkId: string
-  seller?: string
-  buyer?: string
+  seller?: string | null
+  buyer?: string | null
   category: string
   price: number
   description?: string
@@ -127,12 +126,11 @@ declare type Client = {
 
 // Match Params
 declare type CreateMatchParams = {
-  userClerkId: string
-  status: string
   buyerPost: string
   sellerPost: string
   category: string
-  description: string
+  description?: string
+  profit: number
 }
 
 declare type UpdateMatchParams = {
@@ -165,25 +163,31 @@ declare type Match = {
 
 // Slices
 
-declare type Sellers = {
+declare type SellersSlice = {
   allBuyers: Client[]
   singleBuyer: Client
   lastBuyerCreated: Client
 }
 
-declare type Buyers = {
+declare type BuyersSlice = {
   allSellers: Client[]
   singleSeller: Client
   lastSellerCreated: Client
 }
 
-declare type Matches = {
+declare type CategoriesSlice = {
+  allCategories: Category[]
+  singleCategory: Category
+  lastCategoryCreated: Category
+}
+
+declare type MatchesSlice = {
   allMatches: Match[]
   singleMatch: Match
   lastMatchCreated: Match
 }
 
-declare type Posts = {
+declare type PostsSlice = {
   allPosts: Post[]
   singlePost: Post
   lastPostCreated: Post
@@ -191,19 +195,30 @@ declare type Posts = {
   sellerPostToCompare: Post
 }
 
-declare type Users = {
+declare type UsersSlice = {
   allUsers: User[]
   singleUser: User
   ultimoUsuarioCreado: User
 }
 
+declare type FooterMessage = {
+  message: string
+  status: number
+}
+
+declare type FooterSlice = {
+  footerMessage: FooterMessage
+  hideFooter: boolean
+  footerPosition: string
+}
 
 // Store
 declare type Store = {
-  sellers,
-  buyers,
-  categories,
-  matches,
-  posts,
-  users,
+  sellers: Sellers,
+  buyers: Buyers,
+  categories: CategoriesSlice,
+  matches: MatchesSlice,
+  posts: PostsSlice,
+  users: UsersSlice,
+  footer: FooterSlice
 }
