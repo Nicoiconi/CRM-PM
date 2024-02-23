@@ -14,7 +14,7 @@ export default function CategoriesInput({ handleFilter }: Props) {
   const [buyerNamesToShow, setBuyerNamesToShow] = useState<string[]>([])
 
   useEffect(() => {
-    const allCategoriesCopy = [...(allCategories || [])]
+    const allCategoriesCopy = structuredClone(allCategories || [])
     const categoryNames = allCategoriesCopy?.map((s: Category) => s?.name).sort()
     setBuyerNamesToShow(categoryNames)
   }, [allCategories])
