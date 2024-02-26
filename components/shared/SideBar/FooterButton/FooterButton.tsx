@@ -26,7 +26,7 @@ export default function FooterButton() {
     <div
       className={`sidebar-nav_element justify-between p-2 ${pathname === "matches" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
     >
-      <div>
+      <div className="flex items-center">
         Footer
       </div>
 
