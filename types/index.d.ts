@@ -45,6 +45,10 @@ declare type CreateCategoryParams = {
 declare type UpdateCategoryParams = {
   name?: string
   description?: string
+  disable?: boolean
+  is_active?: boolean
+  created_at?: sting
+  modified_at?: sting
 }
 
 declare type Category = {
@@ -60,8 +64,8 @@ declare type Category = {
 
 // Post Params
 declare type CreatePostParams = {
-  seller?: string | null
-  buyer?: string | null
+  seller?: string
+  buyer?: string
   category: string
   price: number
   description?: string
@@ -81,7 +85,7 @@ declare type Post = {
   seller?: string
   buyer?: string
   category: string
-  price: string
+  price: number
   description?: string
   disable: boolean
   is_active: boolean
@@ -106,6 +110,8 @@ declare type UpdateClientParams = {
   description?: string
   email?: string
   phone?: string
+  disable?: boolean
+  is_active?: boolean
 }
 
 declare type Client = {
@@ -115,9 +121,9 @@ declare type Client = {
   name: string
   posts: string[]
   matches: string[]
-  description?: string
   email: string
   phone?: string
+  description?: string
   disable: boolean
   is_active: boolean
   created_at: string
@@ -139,14 +145,18 @@ declare type UpdateMatchParams = {
   sellerPost?: string
   category?: string
   description?: string
+  disable?: boolean
+  is_active?: boolean
+  created_at?: string
+  updated_at?: string
 }
 
 declare type Match = {
   _id: string
   userClerkId: string
   status: string
-  buyerPost: string
-  buyerPost: string
+  buyerPost?: string
+  sellerPost?: string
   category: string
   disable: boolean
   is_active: boolean
@@ -221,4 +231,22 @@ declare type Store = {
   posts: PostsSlice,
   users: UsersSlice,
   footer: FooterSlice
+}
+interface FilterPostsBy {
+  [x: string]: string
+}
+
+interface BuyerPostsByCategory {
+  posts: Post[]
+  unique: string[]
+}
+
+interface SellerPostsByCategory {
+  posts: Post[]
+  unique: string[]
+}
+
+interface CategoryPosts {
+  buyers: BuyerPostsByCategory
+  sellers: SellerPostsByCategory
 }
