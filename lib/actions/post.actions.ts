@@ -38,9 +38,12 @@ export async function createPost(post: CreatePostParams) {
       userClerkId: userId
     })
 
-    return JSON.parse(JSON.stringify(newPost))
-  } catch (error) {
-    handleError(error)
+    if (!newPost) return { message: `Post create failed.`, status: 409, object: null }
+
+    return { message: `Post ${newPost?.name} created`, status: 201, object: JSON.parse(JSON.stringify(newPost)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
 
@@ -51,11 +54,12 @@ export async function getAllPosts() {
 
     const allPosts = await Post.find()
 
-    if (!allPosts) throw new Error("Posts not found")
+    if (!allPosts) return { message: "Posts not found", status: 404, object: null }
 
-    return JSON.parse(JSON.stringify(allPosts))
-  } catch (error) {
-    handleError(error)
+    return { message: `${allPosts?.length} posts found`, status: 200, object: JSON.parse(JSON.stringify(allPosts)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
 
@@ -63,20 +67,25 @@ export async function getPostById(postId: string) {
   try {
     await connectToDatabase()
 
-    const post = await Post.findOne({ clerkId: postId })
+    const postById = await Post.findById(postId)
 
-    if (!post) throw new Error("Post not found")
+    if (!postById) return { message: "Posts not found", status: 404, object: null }
 
-    return JSON.parse(JSON.stringify(post))
-  } catch (error) {
-    handleError(error)
+    return { message: `${postById?.length} posts found`, status: 200, object: JSON.parse(JSON.stringify(postById)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
 
 // UPDATE
-export async function updatePost(clerkId: string, post: UpdatePostParams) {
+export async function updatePost(postId: string, post: UpdatePostParams) {
   try {
     await connectToDatabase()
+
+    const postToUpdate = await Post.findById(postId)
+
+    if (!postToUpdate) return { message: "Post not found.", status: 404, object: null }
 
     const nuevaFecha = new Date()
 
@@ -96,35 +105,38 @@ export async function updatePost(clerkId: string, post: UpdatePostParams) {
     const formattedHour = nuevaFecha.toLocaleTimeString("en-GB", hourFormat)
 
     const updatedPost = await Post.findOneAndUpdate(
-      { clerkId },
+      { _id: postId },
       { ...post, modified_at: `${formattedDate} ${formattedHour}` },
       { new: true }
     )
 
-    if (!updatedPost) throw new Error("Post update failed")
-    
-    return JSON.parse(JSON.stringify(updatedPost))
-  } catch (error) {
-    handleError(error)
+    if (!updatedPost) return { message: `Post update failed.`, status: 409, object: null }
+
+    return { message: `Post ${updatedPost?.name} updated.`, status: 200, object: JSON.parse(JSON.stringify(updatedPost)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
 
 // DELETE
-export async function deletePost(clerkId: string) {
+export async function deletePost(postId: string) {
   try {
     await connectToDatabase()
 
-    const postToDelete = await Post.findOne({ clerkId })
+    const postToDelete = await Post.findById(postId)
 
-    if (!postToDelete) {
-      throw new Error("Post not found.")
-    }
+    if (!postToDelete) return { message: "Post not found.", status: 404, object: null }
 
     const deletedPost = await Post.findByIdAndDelete(postToDelete._id)
+
+    if (!deletedPost) return { message: `Post delete failed.`, status: 409, object: null }
+
     revalidatePath("/")
 
-    return deletedPost ? JSON.parse(JSON.stringify(deletedPost)) : null
-  } catch (error) {
-    handleError(error)
+    return { message: `Post ${postToDelete?.name} deleted.`, status: 200, object: null }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }

@@ -38,9 +38,12 @@ export async function createCategory(category: CreateCategoryParams) {
       userClerkId: userId
     })
 
-    return JSON.parse(JSON.stringify(newCategory))
-  } catch (error) {
-    handleError(error)
+    if (!newCategory) return { message: `Category create failed.`, status: 409, object: null }
+
+    return { message: `Category ${newCategory?.name} created`, status: 201, object: JSON.parse(JSON.stringify(newCategory)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
 
@@ -51,11 +54,12 @@ export async function getAllCategories() {
 
     const allCategories = await Category.find()
 
-    if (!allCategories) throw new Error("Categories not found")
+    if (!allCategories) return { message: "Categories not found", status: 404, object: null }
 
-    return JSON.parse(JSON.stringify(allCategories))
-  } catch (error) {
-    handleError(error)
+    return { message: `${allCategories?.length} categories found`, status: 200, object: JSON.parse(JSON.stringify(allCategories)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
 
@@ -63,20 +67,25 @@ export async function getCategoryById(categoryId: string) {
   try {
     await connectToDatabase()
 
-    const category = await Category.findOne({ clerkId: categoryId })
+    const categoryById = await Category.findById(categoryId)
 
-    if (!category) throw new Error("Category not found")
+    if (!categoryById) return { message: "Category not found.", status: 404, object: null }
 
-    return JSON.parse(JSON.stringify(category))
-  } catch (error) {
-    handleError(error)
+    return { message: `Category ${categoryById?.name} found.`, status: 200, object: JSON.parse(JSON.stringify(categoryById)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
 
 // UPDATE
-export async function updateCategory(clerkId: string, category: UpdateCategoryParams) {
+export async function updateCategory(categoryId: string, category: UpdateCategoryParams) {
   try {
     await connectToDatabase()
+
+    const categoryToUpdate = await Category.findById(categoryId)
+
+    if (!categoryToUpdate) return { message: "Category not found.", status: 404, object: null }
 
     const nuevaFecha = new Date()
 
@@ -96,35 +105,38 @@ export async function updateCategory(clerkId: string, category: UpdateCategoryPa
     const formattedHour = nuevaFecha.toLocaleTimeString("en-GB", hourFormat)
 
     const updatedCategory = await Category.findOneAndUpdate(
-      { clerkId },
+      { _id: categoryId },
       { ...category, modified_at: `${formattedDate} ${formattedHour}` },
       { new: true }
     )
 
-    if (!updatedCategory) throw new Error("Category update failed")
-    
-    return JSON.parse(JSON.stringify(updatedCategory))
-  } catch (error) {
-    handleError(error)
+    if (!updatedCategory) return { message: `Category update failed.`, status: 409, object: null }
+
+    return { message: `Category ${updatedCategory?.name} updated.`, status: 200, object: JSON.parse(JSON.stringify(updatedCategory)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
 
 // DELETE
-export async function deleteCategory(clerkId: string) {
+export async function deleteCategory(categoryId: string) {
   try {
     await connectToDatabase()
 
-    const categoryToDelete = await Category.findOne({ clerkId })
+    const categoryToDelete = await Category.findById(categoryId)
 
-    if (!categoryToDelete) {
-      throw new Error("Category not found.")
-    }
+    if (!categoryToDelete) return { message: "Category not found.", status: 404, object: null }
 
     const deletedCategory = await Category.findByIdAndDelete(categoryToDelete._id)
+
+    if (!deletedCategory) return { message: `Category delete failed`, status: 409, object: null }
+
     revalidatePath("/")
 
-    return deletedCategory ? JSON.parse(JSON.stringify(deletedCategory)) : null
-  } catch (error) {
-    handleError(error)
+    return { message: `Category ${categoryToDelete?.name} deleted`, status: 200, object: null }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
   }
 }
