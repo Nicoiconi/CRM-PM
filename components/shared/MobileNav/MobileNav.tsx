@@ -7,29 +7,38 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import ThemeSwitch from "../ThemeSwitch/ThemeSwitch"
+import FooterButton from "../SideBar/FooterButton/FooterButton"
 
 export default function MobileNav() {
 
   const pathname = usePathname()
   return (
-    <header className="header">
-      <Link href="/" className="flex items-center gap-2 md:py-2">
-        <Image
-          src="/assets/images/logo-text.svg"
-          alt="Logo"
-          width={180}
-          height={28}
-        />
-      </Link>
+    <header className="header h-full">
+      <div className="flex flex-col">
+        <div className="text-[26px] font-bold flex gap-3 items-center">
+          <Link href="/" >
+            CRM
+          </Link>
+          <div className="cursor-pointer">
+            <ThemeSwitch />
+          </div>
+        </div>
+        <div className="text-[16px] overflow-hidden whitespace-nowrap truncate">
+          <Link href="/" >
+            Potential Matches
+          </Link>
+        </div>
+      </div>
 
-      <nav className="flex gap-2">
+      <nav className="flex gap-2 h-full">
         <SignedIn>
           <UserButton afterSignOutUrl="/" />
 
           <Sheet>
             <SheetTrigger>
               <Image
-                src="/assets/icons/menu.svg"
+                src="/assets/menu.svg"
                 alt="Menu"
                 width={32}
                 height={32}
@@ -37,38 +46,68 @@ export default function MobileNav() {
               />
             </SheetTrigger>
 
-            <SheetContent className="sheet-content sm:w-64">
+            <SheetContent className="sheet-content sm:w-auto">
               <>
-                <Image
-                  src="/assets/images/logo-text.svg"
-                  alt="Logo"
-                  width={152}
-                  height={23}
-                />
+                <div>
+                  <div>
+                    Niconics
+                  </div>
+                  <div>
+                    Potential Matches
+                  </div>
+                </div>
 
-                <ul className="header-nav_elements">
-                  {
-                    navLinks.map(link => {
-                      const isActive = link.route === pathname
-                      return (
-                        <li
-                          key={link.route}
-                          className={`${isActive && "gradient-text"} p-18 flex whitespace-nowrap text-dark-700`}
-                        >
-                          <Link href={link.route} className="sidebar-link cursor-pointer">
-                            <Image
-                              src={link.icon}
-                              alt="Logo"
-                              width={24}
-                              height={24}
-                            />
-                            {link.label}
-                          </Link>
-                        </li>
-                      )
-                    })
-                  }
-                </ul>
+                <div className="flex flex-col gap-[60px]">
+                  {/* <ul className="header-nav_elements"> */}
+                  <div className="sidebar-nav_elements pt-[50px]">
+                    <Link
+                      href="/sellers/dashboard"
+                      className={`sidebar-nav_element p-2 ${pathname === "sellers" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                    >
+                      Sellers
+                    </Link>
+
+                    <Link
+                      href="/buyers/dashboard"
+                      className={`sidebar-nav_element p-2 ${pathname === "buyers" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                    >
+                      Buyers
+                    </Link>
+
+                    <Link
+                      href="/categories/dashboard"
+                      className={`sidebar-nav_element p-2 ${pathname === "categories" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                    >
+                      Categories
+                    </Link>
+
+                    <Link
+                      href="/posts/dashboard"
+                      className={`sidebar-nav_element p-2 ${pathname === "posts" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                    >
+                      Posts
+                    </Link>
+
+                    <Link
+                      href="/matches/dashboard"
+                      className={`sidebar-nav_element p-2 ${pathname === "matches" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                    >
+                      Matches
+                    </Link>
+                  </div>
+                  {/* </ul> */}
+
+                  <div className="sidebar-nav_elements">
+                    <FooterButton />
+
+                    <Link
+                      href="/profile"
+                      className={`sidebar-nav_element p-2 ${pathname === "matches" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                    >
+                      Profile
+                    </Link>
+                  </div>
+                </div>
               </>
             </SheetContent>
           </Sheet>
