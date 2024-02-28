@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import Link from "next/link"
-
 import { IconExternalLink } from "@tabler/icons-react"
-import { getSellerById } from "@/lib/actions/seller.actions"
 
 interface Props {
   seller: Client
@@ -16,12 +14,14 @@ interface SellerToRender {
   posts: number
   matches: number
   description: string
-  is_active: boolean
-  disable: boolean
+  is_active: string
+  disable: string
   created_at: string
 }
 
 export default function SellerTableRow({ seller }: Props) {
+
+  const dispatch = useDispatch()
 
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
@@ -41,36 +41,31 @@ export default function SellerTableRow({ seller }: Props) {
 
 
     setSellerData({
-      _id: `...${seller?._id?.slice(-7)}`,
+      _id: seller?._id,
       name: seller?.name,
       // categories: [...new Set([...(seller?.posts?.map((p: Post) => p?.category?.name))])].length,
       categories: uniqueCategoriesLength,
       posts: seller?.posts?.length,
       matches: sellerMatches.length,
       description: seller?.description || "",
-      is_active: seller?.is_active,
-      disable: seller?.disable,
+      is_active: seller?.is_active?.toString(),
+      disable: seller?.disable?.toString(),
       created_at: seller?.created_at
 
     })
   }, [seller])
 
-  function handleSetById() {
-    getSellerById(seller?._id)
-  }
-
   return (
     <tr className="border text-[20px]">
       <td>
         <Link
-          onClick={() => handleSetById()}
-          href="/sellers/search-sellers"
+          href={`/sellers/dashboard/${sellerData?._id}`}
         >
           <IconExternalLink className="m-1" />
         </Link>
       </td>
       <td className="py-1 px-2 overflow-hidden whitespace-nowrap">
-        {sellerData?._id}
+        {`...${seller?._id?.slice(-7)}`}
       </td>
       <td className="py-1 px-2">
         {sellerData?.name}

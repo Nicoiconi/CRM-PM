@@ -6,6 +6,7 @@ import SellerTableRow from "../SellerTableRow/SellerTableRow"
 import SellersInput from "../SellersInput/SellersInput"
 import { getAllSellers } from "@/lib/actions/seller.actions"
 import { setAllSellers } from "@/lib/redux/slices/sellersSlice/sellersSlice"
+import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
 export default function SellersDashboard() {
 
@@ -29,9 +30,14 @@ export default function SellersDashboard() {
 
   async function handleGetAll() {
     const fetchAllSellers = await getAllSellers()
-    dispatch(setAllSellers(fetchAllSellers))
+    if (fetchAllSellers) {
+      const { message, status, object }: { message: string, status: number, object: Client | null } = fetchAllSellers
+      if (status === 200) {
+        dispatch(setAllSellers(object))
+      }
+      dispatch(setFooterMessage({ message, status }))
+    }
   }
-  console.log("state", sellersToRender)
 
   function handleFilterByName(value: string) {
     if (value) {
@@ -44,6 +50,12 @@ export default function SellersDashboard() {
       setIsFilteringByName(false)
     }
   }
+
+  function parseDate(dateString: string): Date {
+    const [day, month, year, time] = dateString.split(/[\/ :]/);
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(time));
+  }
+
 
   function handleOrderBy(value: string) {
     setOrderPressed(value)
@@ -129,14 +141,14 @@ export default function SellersDashboard() {
         return bMatches?.length - aMatches?.length
       })
     }
-    if (value === "newest") {
-      sellersOrdered.sort((a, b) => {
-        return new Date(a?.created_at).getTime() - new Date(b?.created_at).getTime()
-      })
-    }
     if (value === "oldest") {
       sellersOrdered.sort((a, b) => {
-        return new Date(b?.created_at).getTime() - new Date(a?.created_at).getTime()
+        return parseDate(a.created_at).getTime() - parseDate(b.created_at).getTime()
+      })
+    }
+    if (value === "newest") {
+      sellersOrdered.sort((a, b) => {
+        return parseDate(b.created_at).getTime() - parseDate(a.created_at).getTime()
       })
     }
     if (value === "active") {

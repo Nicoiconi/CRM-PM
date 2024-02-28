@@ -5,19 +5,24 @@ import { AutocompleteRenderInputParams } from '@mui/material/Autocomplete'
 
 interface Props {
   handleFilter: (value: string) => void
+  sellerNames?: string[] | undefined
 }
 
-export default function SellersInput({ handleFilter }: Props) {
+export default function SellersInput({ handleFilter, sellerNames }: Props) {
 
   const { allSellers }: { allSellers: Client[] } = useSelector((state: Store) => state.sellers)
 
   const [sellerNamesToShow, setSellerNamesToShow] = useState<string[]>([])
 
   useEffect(() => {
-    const allSellersCopy = [...(allSellers || [])]
-    const sellerNames = allSellersCopy?.map((s: Client) => s?.name).sort()
-    setSellerNamesToShow(sellerNames)
-  }, [allSellers])
+    if(sellerNames) {
+      setSellerNamesToShow(sellerNames)
+    } else {
+      const allSellersCopy = structuredClone(allSellers || [])
+      const allSellerNames = allSellersCopy?.map((s: Client) => s?.name)?.sort()
+      setSellerNamesToShow(allSellerNames)
+    }
+  }, [allSellers, sellerNames])
 
   function handleFilterBySeller(value: string) {
     handleFilter(value)

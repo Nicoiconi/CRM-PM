@@ -5,11 +5,12 @@ import { useEffect, useRef, useState } from "react"
 import { useFormState, useFormStatus } from "react-dom"
 import { SubmitHandler, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { addSellerValidations } from "../../validiations/addSellerValidations"
+import { addSellerValidations } from "../../../validiations/addSellerValidations"
 import { Button } from "@/components/ui/button"
 import { useDispatch, useSelector } from "react-redux"
-import { setAllSellers } from "@/lib/redux/slices/sellersSlice/sellersSlice"
+import { setAllSellers, setSellerById } from "@/lib/redux/slices/sellersSlice/sellersSlice"
 import { redirect } from "next/navigation"
+import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
 export default function AddSellerForm() {
 
@@ -17,7 +18,7 @@ export default function AddSellerForm() {
 
   const { allSellers }: { allSellers: Client[] } = useSelector((state: Store) => state.sellers)
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<CreateClientParams>({
+  const { register, handleSubmit, formState: { errors } } = useForm<CreateClientParams>({
     resolver: zodResolver(addSellerValidations)
   })
 
@@ -29,17 +30,33 @@ export default function AddSellerForm() {
     }
   }, [executeRedirect])
 
-  const handleSubmitForm: SubmitHandler<CreateClientParams> = async sellerData => {
+  const handleSubmitForm: SubmitHandler<CreateClientParams> = async (sellerData, e) => {
     try {
-      const createdSeller = await createSeller(sellerData)
-      console.log(createdSeller)
-      if (createdSeller && createdSeller?._id) {
-        // const allSellersCopy = structuredClone(allSellers || [])
-        dispatch(setAllSellers([...allSellers, createdSeller]))
-        setExecuteRedirect(true)
+      e?.preventDefault()
+      const existingName = allSellers?.find(s => s?.name?.toLowerCase().trim() === sellerData?.name?.toLowerCase().trim())
+      const existingEmail = allSellers?.find(s => s?.email?.toLowerCase().trim() === sellerData?.email?.toLowerCase().trim())
+      if (existingName) {
+        dispatch(setFooterMessage({ message: `Name ${existingName?.name} already exist.`, status: 409 }))
+        return
+      } else if (existingEmail) {
+        dispatch(setFooterMessage({ message: `Email ${existingEmail?.email} already exist.`, status: 409 }))
+        return
+      } else {
+        const createdSeller = await createSeller(sellerData)
+        if (createdSeller) {
+          const { message, status, object }: { message: string, status: number, object: Client | null } = createdSeller
+          if (status === 201) {
+            const allSellersCopy = structuredClone(allSellers || [])
+            dispatch(setAllSellers([...allSellersCopy, object]))
+            dispatch(setSellerById(object))
+            setExecuteRedirect(true)
+          }
+          dispatch(setFooterMessage({ message, status }))
+        }
       }
-    } catch (error) {
-      console.log(error)
+    } catch (error: any) {
+      // console.log(error.message)
+      dispatch(setFooterMessage({ message: error.message, status: 500 }))
     }
   }
 
@@ -50,7 +67,7 @@ export default function AddSellerForm() {
     // Update the input value with only numeric characters
     e.target.value = newValue;
     // Call react-hook-form's onChange to update its internal state
-    return register("phone").onChange(e);
+    // return register("phone").onChange(newValue);
   }
 
   return (
@@ -125,7 +142,7 @@ export default function AddSellerForm() {
                 type="text"
                 className="w-full p-1 rounded"
                 {...register("phone")}
-                onChange={handlePhoneChange}
+                onInput={handlePhoneChange}
               />
             </div>
           </div>
