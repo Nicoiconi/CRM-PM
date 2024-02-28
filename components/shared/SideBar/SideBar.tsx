@@ -19,7 +19,9 @@ export default function SideBar() {
             <Link href="/" >
               CRM
             </Link>
-            <ThemeSwitch />
+            <div className="cursor-pointer">
+              <ThemeSwitch />
+            </div>
           </div>
           <div className="text-[16px]">
             <Link href="/" >
@@ -30,42 +32,44 @@ export default function SideBar() {
 
         <nav className="sidebar-nav h">
           <SignedIn>
-            <div className="sidebar-nav_elements">
-              <Link
-                href="/sellers/dashboard"
-                className={`sidebar-nav_element p-2 ${pathname === "sellers" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
-              >
-                Sellers
-              </Link>
+            <ul className="header-nav_elements">
+              <div className="sidebar-nav_elements">
+                <Link
+                  href="/sellers/dashboard"
+                  className={`sidebar-nav_element p-2 ${pathname === "sellers" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                >
+                  Sellers
+                </Link>
 
-              <Link
-                href="/buyers/dashboard"
-                className={`sidebar-nav_element p-2 ${pathname === "buyers" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
-              >
-                Buyers
-              </Link>
+                <Link
+                  href="/buyers/dashboard"
+                  className={`sidebar-nav_element p-2 ${pathname === "buyers" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                >
+                  Buyers
+                </Link>
 
-              <Link
-                href="/categories/dashboard"
-                className={`sidebar-nav_element p-2 ${pathname === "categories" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
-              >
-                Categories
-              </Link>
+                <Link
+                  href="/categories/dashboard"
+                  className={`sidebar-nav_element p-2 ${pathname === "categories" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                >
+                  Categories
+                </Link>
 
-              <Link
-                href="/posts/dashboard"
-                className={`sidebar-nav_element p-2 ${pathname === "posts" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
-              >
-                Posts
-              </Link>
+                <Link
+                  href="/posts/dashboard"
+                  className={`sidebar-nav_element p-2 ${pathname === "posts" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                >
+                  Posts
+                </Link>
 
-              <Link
-                href="/matches/dashboard"
-                className={`sidebar-nav_element p-2 ${pathname === "matches" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
-              >
-                Matches
-              </Link>
-            </div>
+                <Link
+                  href="/matches/dashboard"
+                  className={`sidebar-nav_element p-2 ${pathname === "matches" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                >
+                  Matches
+                </Link>
+              </div>
+            </ul>
 
             <div className="sidebar-nav_elements">
               <FooterButton />
