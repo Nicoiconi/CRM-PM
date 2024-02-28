@@ -66,8 +66,8 @@ declare type Category = {
 declare type CreatePostParams = {
   seller?: string
   buyer?: string
-  category: string
-  price: number
+  category?: string
+  price?: number
   description?: string
 }
 
