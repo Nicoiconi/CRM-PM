@@ -9,7 +9,7 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
       <SideBar />
       <MobileNav />
 
-      <div className="w-full h-full overflow-auto mt-[64px] lg:mt-[0px]">
+      <div className="w-full h-full overflow-auto pt-[64px] lg:pt-[0px]">
         {children}
         <FooterContainer />
       </div>
