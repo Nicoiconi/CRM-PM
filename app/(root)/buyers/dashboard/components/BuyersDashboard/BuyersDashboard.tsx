@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from "react-redux"
 
 import { IconArrowNarrowDown, IconArrowNarrowUp, IconRefresh } from "@tabler/icons-react"
 import BuyerTableRow from "../BuyerTableRow/BuyerTableRow"
-import BuyersInput from "../BuyersInput/BuyersInput"
 import { getAllBuyers } from "@/lib/actions/buyer.actions"
 import { setAllBuyers } from "@/lib/redux/slices/buyersSlice/buyersSlice"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
+import BuyersInput from "@/components/shared/BuyersInput/BuyersInput"
 
 export default function BuyersDashboard() {
 
@@ -23,7 +23,7 @@ export default function BuyersDashboard() {
 
   useEffect(() => {
     const allBuyersCopy = structuredClone(allBuyers || [])
-    const orderedBuyers = allBuyersCopy.sort((a, b) => {
+    const orderedBuyers = allBuyersCopy?.sort((a, b) => {
       return a?.name?.toLowerCase().localeCompare(b?.name?.toLowerCase())
     })
     setBuyersToRender(orderedBuyers)
@@ -33,6 +33,7 @@ export default function BuyersDashboard() {
     const fetchAllBuyers = await getAllBuyers()
     if (fetchAllBuyers) {
       const { message, status, object }: { message: string, status: number, object: Client | null } = fetchAllBuyers
+      console.log(object)
       if (status === 200) {
         dispatch(setAllBuyers(object))
       }

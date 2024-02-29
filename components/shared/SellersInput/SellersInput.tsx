@@ -18,7 +18,7 @@ export default function SellersInput({ handleFilter, sellerNames }: Props) {
     if(sellerNames) {
       setSellerNamesToShow(sellerNames)
     } else {
-      const allSellersCopy = structuredClone(allSellers || [])
+      const allSellersCopy = [...(allSellers || [])]
       const allSellerNames = allSellersCopy?.map((s: Client) => s?.name)?.sort()
       setSellerNamesToShow(allSellerNames)
     }

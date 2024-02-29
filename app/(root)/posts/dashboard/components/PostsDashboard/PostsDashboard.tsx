@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
+import Link from "next/link"
 
 import { IconCaretDownFilled, IconExternalLink } from "@tabler/icons-react"
 import { getAllPosts } from "@/lib/actions/post.actions"
 import { setAllPosts, setPostById } from "@/lib/redux/slices/postsSlice/postsSlice"
 import CategoriesInput from "@/app/(root)/categories/dashboard/components/CategoriesInput/CategoriesInput"
-import BuyersInput from "../BuyersInput/BuyersInput"
-import Link from "next/link"
-import SellersInput from "@/app/(root)/sellers/dashboard/components/SellersInput/SellersInput"
+import BuyersInput from "@/components/shared/BuyersInput/BuyersInput"
+import SellersInput from "@/components/shared/SellersInput/SellersInput"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 import { IconCaretUpFilled } from "@tabler/icons-react"
 
@@ -27,16 +27,17 @@ export default function PostsDashboard() {
   const { allSellers }: { allSellers: Client[] } = useSelector((state: Store) => state.sellers)
 
   const buyerPosts = useRef<Post[]>()
-  const [buyerCategoryNames, setBuyerCategoryNames] = useState<string[]>()
+  // const [buyerCategoryNames, setBuyerCategoryNames] = useState<string[]>()
   const [buyerPostsToShow, setBuyerPostsToShow] = useState<Post[]>()
   const [buyerNames, setBuyerNames] = useState<string[]>()
   const [buyersFilterBy, setBuyersFilterBy] = useState<FilterBy>()
 
   const sellerPosts = useRef<Post[]>()
-  const [sellerCategoryNames, setSellerCategoryNames] = useState<string[]>()
+  // const [sellerCategoryNames, setSellerCategoryNames] = useState<string[]>()
   const [sellerPostsToShow, setSellersPostsToShow] = useState<Post[]>()
   const [sellerNames, setSellerNames] = useState<string[]>()
   const [sellersFilterBy, setSellersFilterBy] = useState<FilterBy>()
+
   const [hideBuyerPosts, setHideBuyerPosts] = useState(false)
   const [hideSellerPosts, setHideSellerPosts] = useState(false)
 
@@ -46,11 +47,7 @@ export default function PostsDashboard() {
     const postsBuyers = allPostsCopy?.filter(p => p?.buyer)
     buyerPosts.current = postsBuyers
     setBuyerPostsToShow(postsBuyers)
-    const buyerCategories = postsBuyers?.map(p => p?.category)
-    const uniqueBuyerCategoryNames = new Set([...allCategories || []]?.map(c => {
-      if (buyerCategories?.includes(c?._id?.toString())) return c?.name
-    }))
-    setBuyerCategoryNames(Array.from(uniqueBuyerCategoryNames))
+
     const postsBuyerIds = postsBuyers?.map(p => p?.buyer)
     const uniqueBuyerNames = new Set([...allBuyers || []].map(b => {
       if (postsBuyerIds?.includes(b?._id?.toString())) return b?.name
@@ -65,11 +62,7 @@ export default function PostsDashboard() {
     const postsSellers = allPostsCopy.filter(p => p?.seller)
     sellerPosts.current = postsSellers
     setSellersPostsToShow(postsSellers)
-    const sellerCategories = postsSellers?.map(s => s?.category)
-    const uniqueSellerCategoryNames = new Set([...allCategories || []]?.map(c => {
-      if (sellerCategories?.includes(c?._id?.toString())) return c?.name
-    }))
-    setSellerCategoryNames(Array.from(uniqueSellerCategoryNames))
+
     const postsSellerIds = postsSellers?.map(s => s?.seller)
     const uniqueSellerNames = new Set([...allSellers || []].map(b => {
       if (postsSellerIds?.includes(b?._id?.toString())) return b?.name
@@ -111,26 +104,19 @@ export default function PostsDashboard() {
       setBuyerNames(uniqueBuyerNamesArray)
     }
 
+    if (!buyersFilterBy?.category) {
+      const postsBuyerIds = buyerPostsFilteredBy?.map(pb => pb?.buyer)
+      const uniqueBuyerNames = new Set([...allBuyers || []].map(b => {
+        if (postsBuyerIds?.includes(b?._id?.toString())) return b?.name
+      }))
+      const uniqueBuyerNamesArray = Array.from(uniqueBuyerNames).filter(name => name !== undefined) as string[]
+      setBuyerNames(uniqueBuyerNamesArray)
+    }
+
     if (buyersFilterBy?.name) {
       const buyerByName = allBuyers?.find(b => b?.name === buyersFilterBy?.name)
       buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(p => p?.buyer === buyerByName?._id?.toString())
-
-      if (!buyersFilterBy?.category) {
-        const postsBuyerIds = buyerPostsFilteredBy?.map(pb => pb?.buyer)
-        const uniqueBuyerNames = new Set([...allBuyers || []].map(b => {
-          if (postsBuyerIds?.includes(b?._id?.toString())) return b?.name
-        }))
-        const uniqueBuyerNamesArray = Array.from(uniqueBuyerNames).filter(name => name !== undefined) as string[]
-        setBuyerNames(uniqueBuyerNamesArray)
-      }
     }
-
-    const postsCategoryIds = buyerPostsFilteredBy?.map(pc => pc?.category)
-    const uniqueCategoryNames = new Set([...allCategories || []].map(c => {
-      if (postsCategoryIds?.includes(c?._id?.toString())) return c?.name
-    }))
-    const uniqueCategoryNamesArray = Array.from(uniqueCategoryNames).filter(name => name !== undefined) as string[]
-    setBuyerCategoryNames(uniqueCategoryNamesArray)
 
     setBuyerPostsToShow(buyerPostsFilteredBy)
   }, [allBuyers, allCategories, buyersFilterBy])
@@ -146,30 +132,23 @@ export default function PostsDashboard() {
       const uniqueSellerNames = new Set([...allSellers || []].map(b => {
         if (postsSellerIds?.includes(b?._id?.toString())) return b?.name
       }))
-      const uniqueSellerNamesFiltered = Array.from(uniqueSellerNames).filter(name => name !== undefined) as string[]
-      setSellerNames(uniqueSellerNamesFiltered)
+      const uniqueSellerNamesArray = Array.from(uniqueSellerNames).filter(name => name !== undefined) as string[]
+      setSellerNames(uniqueSellerNamesArray)
     }
 
     if (!sellersFilterBy?.category) {
       const postsSellerIds = sellerPostsFilteredBy?.map(s => s?.seller)
-      const uniqueSellerNames = new Set([...allSellers || []].map(b => {
-        if (postsSellerIds?.includes(b?._id?.toString())) return b?.name
+      const uniqueSellerNames = new Set([...allSellers || []].map(s => {
+        if (postsSellerIds?.includes(s?._id?.toString())) return s?.name
       }))
-      const uniqueSellerNamesFiltered = Array.from(uniqueSellerNames).filter(name => name !== undefined) as string[]
-      setSellerNames(uniqueSellerNamesFiltered)
+      const uniqueSellerNamesArray = Array.from(uniqueSellerNames).filter(name => name !== undefined) as string[]
+      setSellerNames(uniqueSellerNamesArray)
     }
 
     if (sellersFilterBy?.name) {
       const sellerByName = allSellers?.find(s => s?.name === sellersFilterBy?.name)
       sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(p => p?.seller === sellerByName?._id?.toString())
     }
-
-    const postsCategoryIds = sellerPostsFilteredBy?.map(pc => pc?.category)
-    const uniqueCategoryNames = new Set([...allCategories || []].map(c => {
-      if (postsCategoryIds?.includes(c?._id?.toString())) return c?.name
-    }))
-    const uniqueCategoryNamesArray = Array.from(uniqueCategoryNames).filter(name => name !== undefined) as string[]
-    setSellerCategoryNames(uniqueCategoryNamesArray)
 
     setSellersPostsToShow(sellerPostsFilteredBy)
   }, [allSellers, allCategories, sellersFilterBy])
@@ -189,15 +168,6 @@ export default function PostsDashboard() {
     })
   }
 
-  // function handleFilterBuyersByCategory(value: string) {
-  //   setBuyersFilterBy(prevState => {
-  //     return {
-  //       ...prevState,
-  //       category: value
-  //     }
-  //   })
-  // }
-
   function handleFilterBuyersByName(value: string) {
     setBuyersFilterBy(prevState => {
       return {
@@ -206,15 +176,6 @@ export default function PostsDashboard() {
       }
     })
   }
-
-  // function handleFilterSellersByCategory(value: string) {
-  //   setSellersFilterBy(prevState => {
-  //     return {
-  //       ...prevState,
-  //       category: value
-  //     }
-  //   })
-  // }
 
   function handleFilterSellersByName(value: string) {
     setSellersFilterBy(prevState => {

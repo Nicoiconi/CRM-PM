@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux"
 
 import { IconArrowNarrowDown, IconArrowNarrowUp, IconRefresh } from "@tabler/icons-react"
 import SellerTableRow from "../SellerTableRow/SellerTableRow"
-import SellersInput from "../SellersInput/SellersInput"
+import SellersInput from "../../../../../../components/shared/SellersInput/SellersInput"
 import { getAllSellers } from "@/lib/actions/seller.actions"
 import { setAllSellers } from "@/lib/redux/slices/sellersSlice/sellersSlice"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
