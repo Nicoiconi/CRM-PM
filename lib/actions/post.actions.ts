@@ -6,6 +6,8 @@ import { redirect } from "next/navigation"
 import Post from "../database/models/post.model"
 import { connectToDatabase } from "../database/mongoose"
 import { handleError } from "../utils"
+import Buyer from "../database/models/buyer.model"
+import Seller from "../database/models/seller.model"
 
 // CREATE
 export async function createPost(post: CreatePostParams) {
@@ -40,7 +42,23 @@ export async function createPost(post: CreatePostParams) {
 
     if (!newPost) return { message: `Post create failed.`, status: 409, object: null }
 
-    return { message: `Post ${newPost?.name} created`, status: 201, object: JSON.parse(JSON.stringify(newPost)) }
+    let postOwnerName = ""
+
+    if (newPost?.buyer) {
+      const buyerPostOwner = await Buyer.findById(newPost?.buyer)
+      if (buyerPostOwner) {
+        postOwnerName = buyerPostOwner?.name
+      }
+    }
+
+    if (newPost?.seller) {
+      const sellerPostOwner = await Seller.findById(newPost?.seller)
+      if (sellerPostOwner) {
+        postOwnerName = sellerPostOwner?.name
+      }
+    }
+
+    return { message: `${newPost?.seller ? "Seller" : "Buyer"} post for ${postOwnerName} created`, status: 201, object: JSON.parse(JSON.stringify(newPost)) }
   } catch (error: any) {
     // handleError(error)
     console.log(error.message)
@@ -112,7 +130,23 @@ export async function updatePost(postId: string, post: UpdatePostParams) {
 
     if (!updatedPost) return { message: `Post update failed.`, status: 409, object: null }
 
-    return { message: `Post ${updatedPost?.name} updated.`, status: 200, object: JSON.parse(JSON.stringify(updatedPost)) }
+    let postOwnerName = ""
+
+    if (updatedPost?.buyer) {
+      const buyerPostOwner = await Buyer.findById(updatedPost?.buyer)
+      if (buyerPostOwner) {
+        postOwnerName = buyerPostOwner?.name
+      }
+    }
+
+    if (updatedPost?.seller) {
+      const sellerPostOwner = await Seller.findById(updatedPost?.seller)
+      if (sellerPostOwner) {
+        postOwnerName = sellerPostOwner?.name
+      }
+    }
+
+    return { message: `${updatedPost?.seller ? "Seller" : "Buyer"} post of ${postOwnerName} updated.`, status: 200, object: JSON.parse(JSON.stringify(updatedPost)) }
   } catch (error: any) {
     // handleError(error)
     console.log(error.message)
