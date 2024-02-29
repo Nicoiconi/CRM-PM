@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { addCategoryValidations } from "../../validiations/addCategoryValidations"
 import { Button } from "@/components/ui/button"
 import { useDispatch, useSelector } from "react-redux"
-import { setAllCategories } from "@/lib/redux/slices/categoriesSlice/categoriesSlice"
+import { setAllCategories, setCategoryById } from "@/lib/redux/slices/categoriesSlice/categoriesSlice"
 import { redirect } from "next/navigation"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
@@ -34,14 +34,18 @@ export default function AddCategoryForm() {
       const existingName = allCategories?.find(c => c?.name?.toLowerCase().trim() === categoryData?.name?.toLowerCase().trim())
       if (existingName) {
         dispatch(setFooterMessage({ message: `Name ${existingName?.name} already in use.`, status: 409 }))
-      } else {
-        const createdCategory = await createCategory(categoryData)
-        if (createdCategory && createdCategory?._id) {
+        return
+      }
+      const createdCategory = await createCategory(categoryData)
+      if (createdCategory) {
+        const { message, status, object }: { message: string, status: number, object: Client | null } = createdCategory
+        if (status === 201) {
           const allCategoriesCopy = structuredClone(allCategories || [])
-          dispatch(setAllCategories([...allCategoriesCopy, createdCategory]))
-          dispatch(setFooterMessage({ message: `Category ${createdCategory?.name} created`, status: 200 }))
+          dispatch(setAllCategories([...allCategoriesCopy, object]))
+          dispatch(setCategoryById(object))
           setExecuteRedirect(true)
         }
+        dispatch(setFooterMessage({ message, status }))
       }
     } catch (error) {
       console.log(error)

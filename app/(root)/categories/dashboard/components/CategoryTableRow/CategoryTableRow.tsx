@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
+import { useSelector } from "react-redux"
 import Link from "next/link"
-
 import { IconExternalLink } from "@tabler/icons-react"
-import { getCategoryById } from "@/lib/actions/category.actions"
 
 interface Props {
   category: Category
@@ -13,60 +11,68 @@ interface CategoryToRender {
   _id: string
   name: string
   description: string
-  is_active: boolean
-  disable: boolean
+  posts: number
+  buyerPosts: number
+  sellerPosts: number
+  matches: number
+  is_active: string
+  disable: string
   created_at: string
 }
 
 export default function CategoryTableRow({ category }: Props) {
 
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
+  const { allPosts }: { allPosts: Post[] } = useSelector((state: Store) => state.posts)
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
 
   const [categoryData, setCategoryData] = useState<CategoryToRender>()
 
   useEffect(() => {
-
-    // const allCategoriesCopy = structuredClone(allCategories || [])
-    // const buyerCategories = allCategoriesCopy?.filter((c: Category) => buyer?.categories?.includes(c?._id))
-    // const uniqueCategoryNames = new Set(buyerCategories?.map((c: Category) => c?.name))
-    // const uniqueCategoriesArray = Array.from(uniqueCategoryNames)
-    // const uniqueCategoriesLength = uniqueCategoriesArray.length
-
-    // const allMatchesCopy = structuredClone(allMatches || [])
-    // const buyerMatches = allMatchesCopy?.filter((m: Match) => buyer?.matches?.includes(m?._id))
-
-
+    const categoryMatches = [...(allMatches || [])].filter(m => m?.category === category?._id?.toString()).length
+    const categoryPosts = [...(allPosts || [])].filter(p => p?.category === category?._id?.toString()).length
+    const categoryBuyerPosts = [...(allPosts || [])].filter(p => p?.buyer && p?.category === category?._id?.toString()).length
+    const categorySellerPosts = [...(allPosts || [])].filter(p => p?.seller && p?.category === category?._id?.toString()).length
     setCategoryData({
-      _id: `...${category?._id?.slice(-7)}`,
+      _id: category?._id,
       name: category?.name,
       description: category?.description,
-      is_active: category?.is_active,
-      disable: category?.disable,
+      posts: categoryPosts,
+      buyerPosts: categoryBuyerPosts,
+      sellerPosts: categorySellerPosts,
+      matches: categoryMatches,
+      is_active: category?.is_active?.toString(),
+      disable: category?.disable?.toString(),
       created_at: category?.created_at
-
     })
-  }, [category])
-
-  function handleSetById() {
-    getCategoryById(category?._id)
-  }
+  }, [allMatches, allPosts, category])
 
   return (
     <tr className="border text-[20px]">
       <td>
         <Link
-          onClick={() => handleSetById()}
-          href="/categories/search-categories"
+          href={`/categories/dashboard/${categoryData?._id}`}
         >
           <IconExternalLink className="m-1" />
         </Link>
       </td>
       <td className="py-1 px-2 overflow-hidden whitespace-nowrap">
-        {categoryData?._id}
+        {`...${category?._id?.slice(-7)}`}
       </td>
       <td className="py-1 px-2">
         {categoryData?.name}
+      </td>
+      <td className="py-1 px-2">
+        {categoryData?.posts}
+      </td>
+      <td className="py-1 px-2">
+        {categoryData?.buyerPosts}
+      </td>
+      <td className="py-1 px-2">
+        {categoryData?.sellerPosts}
+      </td>
+      <td className="py-1 px-2">
+        {categoryData?.matches}
       </td>
       <td className="py-1 px-2">
         {categoryData?.is_active}

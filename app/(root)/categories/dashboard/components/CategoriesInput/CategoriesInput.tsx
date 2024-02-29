@@ -5,33 +5,43 @@ import { AutocompleteRenderInputParams } from '@mui/material/Autocomplete'
 
 interface Props {
   handleFilter: (value: string) => void
+  specificCategoryNames?: string[] | undefined
 }
 
-export default function CategoriesInput({ handleFilter }: Props) {
+export default function CategoriesInput({ handleFilter, specificCategoryNames }: Props) {
 
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
 
-  const [buyerNamesToShow, setBuyerNamesToShow] = useState<string[]>([])
+  const [categoryNamesToShow, setCategoryNamesToShow] = useState<string[]>([])
 
   useEffect(() => {
-    const allCategoriesCopy = structuredClone(allCategories || [])
-    const categoryNames = allCategoriesCopy?.map((s: Category) => s?.name).sort()
-    setBuyerNamesToShow(categoryNames)
-  }, [allCategories])
+    if(specificCategoryNames) {
+      setCategoryNamesToShow(specificCategoryNames)
+    } else {
+      const allCategoriesCopy = structuredClone(allCategories || [])
+      const categoryNames = allCategoriesCopy?.map((s: Category) => s?.name).sort()
+      setCategoryNamesToShow(categoryNames)
+    }
+  }, [allCategories, specificCategoryNames])
 
-  function handleFilterByBuyer(value: string) {
-    handleFilter(value)
+  function handleFilterByCategory(value: string) {
+    console.log(value)
+    if (value) {
+      handleFilter(value)
+    } else {
+      handleFilter("")
+    }
   }
 
   return (
     <Autocomplete
       disablePortal
-      id="buyer-filter"
-      options={buyerNamesToShow || []}
+      id="category-filter"
+      options={categoryNamesToShow || []}
       sx={{ width: 'auto', backgroundColor: 'white', borderRadius: '10px' }}
-      renderInput={(params: AutocompleteRenderInputParams) => <TextField {...params} label="Buyer" />}
+      renderInput={(params: AutocompleteRenderInputParams) => <TextField {...params} label="Category" />}
       onChange={(e: React.SyntheticEvent, newValue: string | null, reason: string) => {
-        handleFilterByBuyer(newValue || "")
+        handleFilterByCategory(newValue || "")
       }}
     />
   )

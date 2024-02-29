@@ -6,6 +6,7 @@ import CategoryTableRow from "../CategoryTableRow/CategoryTableRow"
 import CategoriesInput from "../CategoriesInput/CategoriesInput"
 import { getAllCategories } from "@/lib/actions/category.actions"
 import { setAllCategories } from "@/lib/redux/slices/categoriesSlice/categoriesSlice"
+import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
 export default function CategoriesDashboard() {
 
@@ -29,7 +30,13 @@ export default function CategoriesDashboard() {
 
   async function handleGetAll() {
     const fetchAllCategories = await getAllCategories()
-    dispatch(setAllCategories(fetchAllCategories))
+    if (fetchAllCategories) {
+      const { message, status, object }: { message: string, status: number, object: Client | null } = fetchAllCategories
+      if (status === 200) {
+        dispatch(setAllCategories(object))
+      }
+      dispatch(setFooterMessage({ message, status }))
+    }
   }
   console.log("state", categoriesToRender)
 
