@@ -6,6 +6,7 @@ import BuyerTableRow from "../BuyerTableRow/BuyerTableRow"
 import BuyersInput from "../BuyersInput/BuyersInput"
 import { getAllBuyers } from "@/lib/actions/buyer.actions"
 import { setAllBuyers } from "@/lib/redux/slices/buyersSlice/buyersSlice"
+import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
 export default function BuyersDashboard() {
 
@@ -30,9 +31,14 @@ export default function BuyersDashboard() {
 
   async function handleGetAll() {
     const fetchAllBuyers = await getAllBuyers()
-    dispatch(setAllBuyers(fetchAllBuyers))
+    if (fetchAllBuyers) {
+      const { message, status, object }: { message: string, status: number, object: Client | null } = fetchAllBuyers
+      if (status === 200) {
+        dispatch(setAllBuyers(object))
+      }
+      dispatch(setFooterMessage({ message, status }))
+    }
   }
-  console.log("state", buyersToRender)
 
   function handleFilterByName(value: string) {
     if (value) {
@@ -43,6 +49,11 @@ export default function BuyersDashboard() {
       setBuyersToRender([...(allBuyers || [])])
       setIsFilteringByName(false)
     }
+  }
+
+  function parseDate(dateString: string): Date {
+    const [day, month, year, time] = dateString.split(/[\/ :]/);
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(time));
   }
 
   function handleOrderBy(value: string) {
@@ -128,34 +139,36 @@ export default function BuyersDashboard() {
         return b?.matches?.length - a?.matches?.length
       })
     }
-    if (value === "newest") {
-      buyersOrdered.sort((a, b) => {
-        return new Date(a?.created_at).getTime() - new Date(b?.created_at).getTime()
-      })
-    }
     if (value === "oldest") {
       buyersOrdered.sort((a, b) => {
-        return new Date(b?.created_at).getTime() - new Date(a?.created_at).getTime()
+        // return new Date(a?.created_at).getTime() - new Date(b?.created_at).getTime()
+        return parseDate(a?.created_at).getTime() - parseDate(b?.created_at).getTime()
+      })
+    }
+    if (value === "newest") {
+      buyersOrdered.sort((a, b) => {
+        // return new Date(b?.created_at).getTime() - new Date(a?.created_at).getTime()
+        return parseDate(b?.created_at).getTime() - parseDate(a?.created_at).getTime()
       })
     }
     if (value === "active") {
       buyersOrdered.sort((a, b) => {
-        return a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
+        return a?.is_active === b?.is_active ? 0 : a?.is_active ? -1 : 1
       })
     }
     if (value === "deactive") {
       buyersOrdered.sort((a, b) => {
-        return a.is_active === b.is_active ? 0 : a.is_active ? 1 : -1
+        return a?.is_active === b?.is_active ? 0 : a?.is_active ? 1 : -1
       })
     }
     if (value === "disable") {
       buyersOrdered.sort((a, b) => {
-        return a.disable === b.disable ? 0 : a.disable ? -1 : 1
+        return a?.disable === b?.disable ? 0 : a?.disable ? -1 : 1
       })
     }
     if (value === "enable") {
       buyersOrdered.sort((a, b) => {
-        return a.disable === b.disable ? 0 : a.disable ? 1 : -1
+        return a?.disable === b?.disable ? 0 : a?.disable ? 1 : -1
       })
     }
     setBuyersToRender(buyersOrdered)

@@ -20,8 +20,8 @@ interface BuyerToRender {
   posts: number
   matches: number
   description: string
-  is_active: boolean
-  disable: boolean
+  is_active: string
+  disable: string
   created_at: string
 }
 
@@ -53,31 +53,17 @@ export default function BuyerTableRow({ buyer }: Props) {
       posts: buyer?.posts?.length,
       matches: buyerMatches.length,
       description: buyer?.description || "",
-      is_active: buyer?.is_active,
-      disable: buyer?.disable,
+      is_active: buyer?.is_active?.toString(),
+      disable: buyer?.disable?.toString(),
       created_at: buyer?.created_at
 
     })
   }, [buyer])
 
-  // async function handleSetById() {
-  //   const singleBuyerSelected = await getBuyerById(buyer?._id)
-  //   if (singleBuyerSelected) {
-  //     const { message, status, object } = singleBuyerSelected
-  //     if (status === 200) {
-  //       dispatch(setFooterMessage({ message, status }))
-  //       dispatch(setBuyerById(singleBuyerSelected))
-  //       return
-  //     }
-  //   }
-  //   dispatch(setFooterMessage({ message: "Get Buyer failed", status: 409 }))
-  // }
-
   return (
     <tr className="border text-[20px]">
       <td>
         <Link
-          // onClick={() => handleSetById()}
           href={`/buyers/dashboard/${buyerData?._id}`}
         >
           <IconExternalLink className="m-1" />

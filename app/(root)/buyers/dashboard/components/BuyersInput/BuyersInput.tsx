@@ -14,7 +14,7 @@ export default function BuyersInput({ handleFilter }: Props) {
   const [buyerNamesToShow, setBuyerNamesToShow] = useState<string[]>([])
 
   useEffect(() => {
-    const allBuyersCopy = [...(allBuyers || [])]
+    const allBuyersCopy = structuredClone(allBuyers || [])
     const buyerNames = allBuyersCopy?.map((s: Client) => s?.name).sort()
     setBuyerNamesToShow(buyerNames)
   }, [allBuyers])
