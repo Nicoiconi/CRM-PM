@@ -46,7 +46,7 @@ export default function MobileNav() {
               />
             </SheetTrigger>
 
-            <SheetContent className="sheet-content sm:w-auto">
+            <SheetContent className="sheet-content w-auto">
               <>
                 <div>
                   <div>

@@ -30,7 +30,7 @@ export default function SideBar() {
           </div>
         </div>
 
-        <nav className="sidebar-nav h">
+        <nav className="sidebar-nav">
           <SignedIn>
             <ul className="header-nav_elements">
               <div className="sidebar-nav_elements">
