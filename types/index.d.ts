@@ -77,6 +77,8 @@ declare type UpdatePostParams = {
   category?: string
   price?: number
   description?: string
+  disable?: boolean
+  is_active?: boolean
 }
 
 declare type Post = {
@@ -158,6 +160,8 @@ declare type Match = {
   buyerPost?: string
   sellerPost?: string
   category: string
+  profit: number
+  description: string
   disable: boolean
   is_active: boolean
   created_at: string
