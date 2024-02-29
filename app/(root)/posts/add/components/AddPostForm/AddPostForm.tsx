@@ -1,16 +1,20 @@
 "use client"
 
 import { createPost } from "@/lib/actions/post.actions"
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { SubmitHandler, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { addPostValidations } from "../../validiations/addPostValidations"
 import { Button } from "@/components/ui/button"
 import { useDispatch, useSelector } from "react-redux"
-import { setAllPosts } from "@/lib/redux/slices/postsSlice/postsSlice"
+import { setAllPosts, setPostById } from "@/lib/redux/slices/postsSlice/postsSlice"
 import { redirect } from "next/navigation"
 import AutoCompleteInputNewForm from "../AutoCompleteInputNewForm/AutoCompleteInputNewForm"
-import { IconSquareRoundedX } from "@tabler/icons-react"
+import { IconRefresh, IconSquareRoundedX } from "@tabler/icons-react"
+import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
+import { getAllCategories } from "@/lib/actions/category.actions"
+import { setAllCategories } from "@/lib/redux/slices/categoriesSlice/categoriesSlice"
+import CategoriesInput from "@/app/(root)/categories/dashboard/components/CategoriesInput/CategoriesInput"
 
 interface OwnersForInput {
   _id: string
@@ -27,115 +31,195 @@ export default function AddPostForm() {
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
 
   const [postOwner, setPostOwner] = useState("")
-  const [newPost, setNewPost] = useState<CreatePostParams>({
-    seller: null,
-    buyer: null,
-    category: "",
-    price: 0,
-    description: ""
-  })
+  const [newPost, setNewPost] = useState<CreatePostParams | undefined>()
   const [ownersForInput, setOwnersForInput] = useState<OwnersForInput[]>([])
   const [alreadyExistError, setAlreadyExistError] = useState(false)
   const [executeRedirect, setExecuteRedirect] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState("")
   // console.log(newPost)  
 
   useEffect(() => {
     if (executeRedirect) {
-      redirect("/buyers/dashboard")
+      redirect("/posts/dashboard")
     }
   }, [executeRedirect])
 
   useEffect(() => {
-    if (postOwner === "Buyer") {
-      const buyersForInput = allBuyers?.map(b => ({ _id: b?._id, name: b?.name }))
-      setOwnersForInput(buyersForInput)
+    if (selectedCategory) {
+      const findSelectedCategory = allCategories?.find(c => c?.name === selectedCategory)
+      setNewPost(prevState => {
+        if (prevState) {
+          return {
+            ...prevState,
+            category: findSelectedCategory?._id?.toString()
+          }
+        } else {
+          return {
+            category: findSelectedCategory?._id?.toString(),
+            price: 0
+          }
+        }
+      })
+    } else {
+      setNewPost(prevState => {
+        if (prevState) {
+          return {
+            ...prevState,
+            category: ""
+          }
+        } else {
+          return {
+            category: "",
+            price: 0
+          }
+        }
+      })
     }
-    if (postOwner === "Seller") {
-      const sellersForInput = allSellers?.map(b => ({ _id: b?._id, name: b?.name }))
-      setOwnersForInput(sellersForInput)
-    }
-  }, [postOwner])
+  }, [selectedCategory])
+
+  // useEffect(() => {
+  //   if (postOwner === "Buyer") {
+  //     const allBuyersCopy = structuredClone(allBuyers || [])
+  //     const buyersForInput = allBuyersCopy?.map(b => ({ _id: b?._id, name: b?.name }))
+  //     setOwnersForInput(buyersForInput)
+  //   }
+  //   if (postOwner === "Seller") {
+  //     const allSellersCopy = structuredClone(allSellers || [])
+  //     const sellersForInput = allSellersCopy?.map(b => ({ _id: b?._id, name: b?.name }))
+  //     setOwnersForInput(sellersForInput)
+  //   }
+  // }, [allBuyers, allSellers, postOwner])
 
   function handlePostOwner(e: React.ChangeEvent<HTMLInputElement>) {
     const { value } = e.target
+    const newPostCopy = structuredClone(newPost || {})
     if (value === "Seller") {
       setPostOwner("Seller")
-      setNewPost((prevState) => ({
-        ...prevState,
-        buyer: null
-      }))
+      if (newPostCopy?.buyer) {
+        delete newPostCopy?.buyer
+      }
+      const allSellersCopy = structuredClone(allSellers || [])
+      const sellersForInput = allSellersCopy?.map(b => ({ _id: b?._id, name: b?.name }))
+      setOwnersForInput(sellersForInput)
     }
     if (value === "Buyer") {
       setPostOwner("Buyer")
-      setNewPost((prevState) => ({
-        ...prevState,
-        seller: null
-      }))
+      if (newPost?.seller) {
+        delete newPostCopy?.seller
+      }
+      const allBuyersCopy = structuredClone(allBuyers || [])
+      const buyersForInput = allBuyersCopy?.map(b => ({ _id: b?._id, name: b?.name }))
+      setOwnersForInput(buyersForInput)
     }
+    if (newPost && !newPost?.category) {
+      newPostCopy.category = ""
+    }
+    if (newPost && !newPost?.category) {
+      newPostCopy.category = ""
+    }
+    setNewPost(newPostCopy)
   }
 
   function handleNewPost(e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) {
     const { name, value } = e.target
     setNewPost(prevState => {
-      return {
-        ...prevState,
-        [name]: value
+      if (prevState) {
+        return {
+          ...prevState,
+          [name]: value
+        }
+      } else {
+        return {
+          [name]: value,
+          category: '',
+          price: 0
+        }
       }
     })
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (postOwner === "Buyer") {
-      const postAlreadyExist = allPosts.find((p: Post) =>
-        p?.buyer === newPost?.buyer &&
-        p?.category === newPost?.category &&
-        Number(p?.price) === Number(newPost?.price)
-      )
-      if (postAlreadyExist) {
-        e.preventDefault()
-        setAlreadyExistError(true)
-        // dispatch(setFooterMessage({ status: 409, message: `Buyer post >> ${postAlreadyExist?.buyer?.name} - ${postAlreadyExist?.category?.name} - $ ${postAlreadyExist?.price} << already existe` }))
-        return
-      }
-      const createdPost = await createPost(newPost)
-      if (createdPost && createdPost?._id) {
-        if (createdPost && createdPost?._id) {
-          const allPostsCopy = structuredClone(allPosts || [])
-          dispatch(setAllPosts([...allPostsCopy, createdPost]))
-          setExecuteRedirect(true)
+    e.preventDefault()
+    if (
+      newPost &&
+      (newPost?.seller || newPost?.buyer) &&
+      newPost?.category
+    ) {
+      if (postOwner === "Buyer") {
+        const postAlreadyExist = allPosts.find(p =>
+          p?.buyer === newPost?.buyer &&
+          p?.category === newPost?.category &&
+          Number(p?.price) === Number(newPost?.price)
+        )
+        if (postAlreadyExist) {
+          setAlreadyExistError(true)
+          const buyerPostAlreadyExist = allBuyers?.find(b => b?._id?.toString() === newPost?.buyer)
+          const categoryPostAlreadyExist = allCategories?.find(c => c?._id?.toString() === newPost?.category)
+          dispatch(setFooterMessage({ status: 409, message: `Buyer post >> ${buyerPostAlreadyExist?.name} - ${categoryPostAlreadyExist?.name} - $ ${postAlreadyExist?.price} << already existe` }))
+          return
+        }
+        const createdPost = await createPost(newPost)
+        if (createdPost) {
+          const { message, status, object }: { message: string, status: number, object: Client | null } = createdPost
+          if (status === 201) {
+            const allPostsCopy = structuredClone(allPosts || [])
+            dispatch(setAllPosts([...allPostsCopy, object]))
+            dispatch(setPostById(object))
+            setExecuteRedirect(true)
+          }
+          dispatch(setFooterMessage({ message, status }))
         }
       }
-    }
-    if (postOwner === "Seller") {
-      const postAlreadyExist = allPosts.find((p) =>
-        p?.seller === newPost?.seller &&
-        p?.category === newPost?.category &&
-        Number(p?.price) === Number(newPost?.price)
-      )
-      if (postAlreadyExist) {
-        e.preventDefault()
-        setAlreadyExistError(true)
-        // dispatch(setFooterMessage({ status: 409, message: `Seller post >> ${postAlreadyExist?.seller?.name} - ${postAlreadyExist?.category?.name} - $ ${postAlreadyExist?.price} << already existe` }))
-        return
-      }
-      const createdPost = await createPost(newPost)
-      if (createdPost && createdPost?._id) {
-        if (createdPost && createdPost?._id) {
-          const allPostsCopy = structuredClone(allPosts || [])
-          dispatch(setAllPosts([...allPostsCopy, createdPost]))
-          setExecuteRedirect(true)
+      if (postOwner === "Seller") {
+        const postAlreadyExist = allPosts.find((p) =>
+          p?.seller === newPost?.seller &&
+          p?.category === newPost?.category &&
+          Number(p?.price) === Number(newPost?.price)
+        )
+        if (postAlreadyExist) {
+          setAlreadyExistError(true)
+          const sellerPostAlreadyExist = allSellers?.find(b => b?._id?.toString() === newPost?.seller)
+          const categoryPostAlreadyExist = allCategories?.find(c => c?._id?.toString() === newPost?.category)
+          dispatch(setFooterMessage({ status: 409, message: `Seller post >> ${sellerPostAlreadyExist?.name} - ${categoryPostAlreadyExist?.name} - $ ${postAlreadyExist?.price} << already existe` }))
+          return
+        }
+        const createdPost = await createPost(newPost)
+        if (createdPost) {
+          const { message, status, object }: { message: string, status: number, object: Client | null } = createdPost
+          if (status === 201) {
+            const allPostsCopy = structuredClone(allPosts || [])
+            dispatch(setAllPosts([...allPostsCopy, object]))
+            dispatch(setPostById(object))
+            setExecuteRedirect(true)
+          }
+          dispatch(setFooterMessage({ message, status }))
         }
       }
     }
   }
-  // console.log(newPost)
 
   function handleClearErrorAlreadyExist() {
     setAlreadyExistError(false)
   }
 
+  async function handleGetAllCategories(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    const allCategoriesData = await getAllCategories()
+    if (allCategoriesData) {
+      const { message, status, object } = allCategoriesData
+      if (status === 200) {
+        dispatch(setAllCategories(object))
+      }
+      dispatch(setFooterMessage({ message, status }))
+      return
+    }
+    dispatch(setFooterMessage({ message: "Get Categories failed", status: 409 }))
+  }
+
+  console.log(newPost)
+
   return (
-    <form onSubmit={(e) => handleSubmit(e)} className="w-1/2 p-2 shadow bg-gray-500">
+    <form onSubmit={(e) => handleSubmit(e)} className="w-1/2 p-2 shadow bg-dark-500 rounded border">
 
       <div className={`flex flex-wrap justify-around`}>
         {
@@ -151,12 +235,11 @@ export default function AddPostForm() {
                 <IconSquareRoundedX />
               </div>
             </div>
-
-            : <>
-              <div className="w-1/2 p-4">
+            : <div>
+              <div className="w-full flex-center p-4">
                 <h5>New Post</h5>
               </div>
-              <div className="w-1/2 p-4">
+              <div className="w-full flex-center p-4">
                 {
 
                   (newPost?.seller || newPost?.buyer) && newPost?.category && newPost?.price
@@ -164,7 +247,7 @@ export default function AddPostForm() {
                     : "Required field: Owner, Category and Price"
                 }
               </div>
-            </>
+            </div>
         }
       </div>
 
@@ -176,9 +259,8 @@ export default function AddPostForm() {
               type="radio"
               name="post-owner"
               value="Seller"
-              // onClick={(e) => handlePostOwner(e)}
               onChange={(e) => handlePostOwner(e)}
-              checked={postOwner === "Seller"}
+              checked={postOwner === "Seller" || false}
             />
 
             <label
@@ -194,9 +276,8 @@ export default function AddPostForm() {
               type="radio"
               name="post-owner"
               value="Buyer"
-              // onClick={(e) => handlePostOwner(e)}
               onChange={(e) => handlePostOwner(e)}
-              checked={postOwner === "Seller"}
+              checked={postOwner === "Buyer" || false}
             />
             <label
               className="pl-1"
@@ -209,39 +290,70 @@ export default function AddPostForm() {
       </div>
 
       <div className="w-full max-w-md mx-auto">
-        <div className=" bg-gray-400 shadow-md rounded py-5 px-10">
-          <AutoCompleteInputNewForm
-            setNew={setNewPost}
-            componentName={postOwner.toLowerCase()}
-            elements={ownersForInput}
-          />
+        <div className="flex gap-3 shadow-md rounded py-5 px-10">
+          <div className="w-full">
+            <AutoCompleteInputNewForm
+              setNewPost={setNewPost}
+              componentName={postOwner.toLowerCase() || "Choose a Seller or Buyer"}
+              elements={ownersForInput}
+              newPost={newPost}
+            />
+
+          </div>
+          <div className="flex-center">
+            <button
+              onClick={handleGetAllCategories}
+            >
+              <IconRefresh
+                width={30}
+                height={30}
+              />
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="w-full max-w-md mx-auto">
-        <div className=" bg-gray-400 shadow-md rounded py-5 px-10">
-          <AutoCompleteInputNewForm
-            setNew={setNewPost}
-            componentName="category"
-            elements={allCategories}
-          />
+        <div className="flex gap-3 shadow-md rounded py-5 px-10">
+          <div className="w-full">
+            {/* <AutoCompleteInputNewForm
+              setNew={setNewPost}
+              componentName="category"
+              elements={allCategories}
+              newPost={newPost}
+            /> */}
+            <CategoriesInput
+              handleFilter={setSelectedCategory}
+            />
+          </div>
+          <div className="flex-center">
+            <button
+              onClick={handleGetAllCategories}
+            >
+              <IconRefresh
+                width={30}
+                height={30}
+              />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="w-full max-w-md mx-auto">
-        <div className="flex bg-gray-400 shadow-md rounded p-5 px-10">
-          <div className="w-1/4 mb-4">
+      <div className="w-full max-w-md mx-auto text-[18px]">
+        <div className="flex flex-wrap shadow-md rounded py-5 px-10 gap-3">
+          <div className="w-[90px] mb-4">
             <label
               htmlFor="price-input"
-              className="text-black text-sm font-bold"
+              className="text-black font-bold"
             >
               Price
             </label>
           </div>
 
-          <div className="w-auto px-4 w-full">
+          <div className="">
             <input
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              // className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="rounded w-[100px] text-right"
               id="price-input"
               type="number"
               name="price"
@@ -252,7 +364,7 @@ export default function AddPostForm() {
             {
               newPost?.price === 0
                 ? <div className={` text-center w-full text-sm`}>
-                  The price cannot be 0.
+                  Cannot be 0.
                 </div>
                 : ""
             }
@@ -261,22 +373,23 @@ export default function AddPostForm() {
       </div>
 
       <div className="w-full max-w-md mx-auto">
-        <div className="flex bg-gray-400 shadow-md rounded p-5 px-10">
-          <div className="w-1/4 mb-4">
+        <div className="flex flex-wrap shadow-md rounded py-5 px-10 gap-3">
+          <div className="w-[90px] mb-4">
             <label
               htmlFor="inputDescription"
-              className="text-black text-sm font-bold"
+              className="text-black font-bold"
             >
               Description
             </label>
           </div>
-          <div className="w-3/4 px-4">
+          <div className="">
             <textarea
               name="description"
               id="inputDescription"
               value={newPost?.description}
               onChange={(e) => handleNewPost(e)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              // className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              className="w-full p-1 rounded"
               placeholder="What ever you want"
             />
           </div>

@@ -4,7 +4,7 @@ export default function PostsLayout({ children }: { children: React.ReactNode })
   return (
     <main>
 
-      <nav className="flex justify-around p-3">
+      <nav className="flex justify-around p-3 py-5">
         <div>
           <NavButton
             path="/posts/dashboard"

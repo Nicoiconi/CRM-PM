@@ -1,10 +1,8 @@
-"use client"
-
 import AddBuyerForm from './components/AddPostForm/AddPostForm'
 
 export default function AddBuyerPage() {
   return (
-    <div>
+    <div className='flex-center'>
       <AddBuyerForm />
     </div>
   )
