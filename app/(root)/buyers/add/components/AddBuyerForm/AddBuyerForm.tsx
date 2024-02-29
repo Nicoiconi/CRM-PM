@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { addBuyerValidations } from "../../validiations/addBuyerValidations"
 import { Button } from "@/components/ui/button"
 import { useDispatch, useSelector } from "react-redux"
-import { setAllBuyers } from "@/lib/redux/slices/buyersSlice/buyersSlice"
+import { setAllBuyers, setBuyerById } from "@/lib/redux/slices/buyersSlice/buyersSlice"
 import { redirect } from "next/navigation"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
@@ -17,7 +17,7 @@ export default function AddBuyerForm() {
 
   const { allBuyers }: { allBuyers: Client[] } = useSelector((state: Store) => state.buyers)
 
-  const { register, handleSubmit, watch, formState: { errors } } = useForm<CreateClientParams>({
+  const { register, handleSubmit, formState: { errors } } = useForm<CreateClientParams>({
     resolver: zodResolver(addBuyerValidations)
   })
 
@@ -31,19 +31,25 @@ export default function AddBuyerForm() {
 
   const handleSubmitForm: SubmitHandler<CreateClientParams> = async buyerData => {
     try {
-      const existingName = allBuyers?.find(d => d?.name?.toLowerCase().trim() === buyerData?.name?.toLowerCase().trim())
-      const existingEmail = allBuyers?.find(d => d?.email?.toLowerCase().trim() === buyerData?.email?.toLowerCase().trim())
+      const existingName = allBuyers?.find(b => b?.name?.toLowerCase().trim() === buyerData?.name?.toLowerCase().trim())
+      const existingEmail = allBuyers?.find(b => b?.email?.toLowerCase().trim() === buyerData?.email?.toLowerCase().trim())
       if (existingName) {
-        dispatch(setFooterMessage({ message: `Name ${existingName?.name} already in use.`, status: 409 }))
+        dispatch(setFooterMessage({ message: `Name ${existingName?.name} already exist.`, status: 409 }))
+        return
       } else if (existingEmail) {
-        dispatch(setFooterMessage({ message: `Email ${existingEmail?.email} already in use.`, status: 409 }))
+        dispatch(setFooterMessage({ message: `Email ${existingEmail?.email} already exist.`, status: 409 }))
+        return
       } else {
         const createdBuyer = await createBuyer(buyerData)
-        if (createdBuyer && createdBuyer?._id) {
-          const allBuyersCopy = structuredClone(allBuyers || [])
-          dispatch(setAllBuyers([...allBuyersCopy, createdBuyer]))
-          dispatch(setFooterMessage({ message: `Buyer ${createdBuyer?.name} created`, status: 200 }))
-          setExecuteRedirect(true)
+        if (createdBuyer) {
+          const { message, status, object }: { message: string, status: number, object: Client | null } = createdBuyer
+          if (status === 201) {
+            const allBuyersCopy = structuredClone(allBuyers || [])
+            dispatch(setAllBuyers([...allBuyersCopy, object]))
+            dispatch(setBuyerById(object))
+            setExecuteRedirect(true)
+          }
+          dispatch(setFooterMessage({ message, status }))
         }
       }
     } catch (error) {
@@ -58,7 +64,7 @@ export default function AddBuyerForm() {
     // Update the input value with only numeric characters
     e.target.value = newValue;
     // Call react-hook-form's onChange to update its internal state
-    return register("phone").onChange(e);
+    // return register("phone").onChange(e);
   }
 
   return (
@@ -80,7 +86,7 @@ export default function AddBuyerForm() {
                 id="buyer-name"
                 type="text"
                 className="w-full p-1 rounded"
-                {...register("name")} // crea las prop name, value y onChange
+                {...register("name")}
               />
             </div>
           </div>
@@ -133,7 +139,7 @@ export default function AddBuyerForm() {
                 type="text"
                 className="w-full p-1 rounded"
                 {...register("phone")}
-                onChange={handlePhoneChange}
+                onInput={handlePhoneChange}
               />
             </div>
           </div>
