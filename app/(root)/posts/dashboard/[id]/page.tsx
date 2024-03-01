@@ -1,15 +1,16 @@
 "use client"
 
-import { IconEdit, IconTrashX } from "@tabler/icons-react"
-import { IconEditOff, IconRefresh } from "@tabler/icons-react"
 import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import SellersInput from "./components/SellersInput/SellersInput"
-import BuyersInput from "./components/BuyersInput/BuyersInput"
+import { redirect, usePathname } from "next/navigation"
+import { IconEdit, IconTrashX } from "@tabler/icons-react"
+import { IconEditOff, IconRefresh } from "@tabler/icons-react"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
-import { setAllPosts } from "@/lib/redux/slices/postsSlice/postsSlice"
-import { deletePost } from "@/lib/actions/post.actions"
+import { setAllPosts, setPostById } from "@/lib/redux/slices/postsSlice/postsSlice"
+import { deletePost, getPostById } from "@/lib/actions/post.actions"
 import EditPostForm from "./components/EditPostForm/EditPostForm"
+import SellersInput from "@/components/shared/SellersInput/SellersInput"
+import BuyersInput from "@/components/shared/BuyersInput/BuyersInput"
 
 interface FilterBy {
   category?: string
@@ -27,6 +28,9 @@ enum OrderBy {
 export default function PostByIdPage() {
 
   const dispatch = useDispatch()
+
+  const pathname = usePathname()
+  const postId = pathname?.split("/").pop()
 
   const { allPosts, singlePost }: { allPosts: Post[], singlePost: Post } = useSelector((state: Store) => state.posts)
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
@@ -50,26 +54,54 @@ export default function PostByIdPage() {
   const [enableEdit, setEnableEdit] = useState(false)
   const [filterBy, setFilterBy] = useState<FilterBy>()
   const [orderBy, setOrderBy] = useState({})
+  const [enableDelete, setEnableDelete] = useState(false)
+  const [executeRedirect, setExecuteRedirect] = useState(false)
+
+  useEffect(() => {
+    if (executeRedirect) {
+      redirect("/posts/dashboard")
+    }
+  }, [executeRedirect])
+
+  useEffect(() => {
+    if (postId) {
+      (async function handleGetById() {
+        const singlePostSelected = await getPostById(postId)
+        if (singlePostSelected) {
+          const { message, status, object } = singlePostSelected
+          if (status === 200) {
+            dispatch(setFooterMessage({ message, status }))
+            dispatch(setPostById(object))
+            return
+          }
+        }
+        console.log("hola")
+        dispatch(setFooterMessage({ message: "Get Post failed", status: 409 }))
+      })()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId])
 
   useEffect(() => {
     setSinglePostToShow(singlePost)
+    const allMatchesCopy = structuredClone(allMatches || [])
 
     // if the owner of the post is a Buyer
     if (singlePost?.buyer) {
       // find all matches of post, in Match withh be buyerPost
-      const matches = [...(allMatches || [])]?.filter(m => m?.buyerPost === singlePost?._id.toString())
+      const matches = allMatchesCopy?.filter(m => m?.buyerPost === singlePost?._id.toString())
       postMatches.current = matches
       setPostMatchesToShow(matches)
     }
     // if the owner of the post is a Seller
     if (singlePost?.seller) {
       // find all matches of post, in Match withh be sellerPost
-      const matches = [...(allMatches || [])]?.filter(m => m?.sellerPost === singlePost?._id.toString())
+      const matches = allMatchesCopy?.filter(m => m?.sellerPost === singlePost?._id.toString())
       postMatches.current = matches
       setPostMatchesToShow(matches)
     }
     setEnableEdit(false)
-  }, [singlePost])
+  }, [allMatches, singlePost])
 
   useEffect(() => {
     // if the owner of the post is a Buyer
@@ -86,7 +118,7 @@ export default function PostByIdPage() {
 
       // get all sellers from matching posts
       const allPostsCopy = structuredClone(allPosts || [])
-      const matchingSellerIds = allPostsCopy.filter(p => matchingSellerPosts?.includes(p?._id?.toString()))
+      const matchingSellerIds = allPostsCopy?.filter(p => matchingSellerPosts?.includes(p?._id?.toString()))
 
       // an empty array store the names
 
@@ -108,7 +140,7 @@ export default function PostByIdPage() {
 
       // get all buyers from matching posts
       const allPostsCopy = structuredClone(allPosts || [])
-      const matchingBuyerIds = allPostsCopy.filter(p => matchingBuyerPosts?.includes(p?._id?.toString()))
+      const matchingBuyerIds = allPostsCopy?.filter(p => matchingBuyerPosts?.includes(p?._id?.toString()))
 
       // const names: string[] = []
 
@@ -127,9 +159,22 @@ export default function PostByIdPage() {
     setNamesToFilter(namesOrdered)
   }, [allPosts, allBuyers, allSellers, singlePost?.buyer, singlePost?.seller])
 
-  function handleRefresh() {
-    const refreshPost = [...(allPosts || [])].find(p => p?._id.toString() === singlePost?._id.toString())
-    setSinglePostToShow(refreshPost)
+  async function handleRefresh() {
+    // const refreshPost = [...(allPosts || [])].find(p => p?._id.toString() === singlePost?._id.toString())
+    // setSinglePostToShow(refreshPost)
+    if (postId) {
+      const refreshBuyer = await getPostById(postId)
+      if (refreshBuyer) {
+        const { message, status, object }: { message: string, status: number, object: Client | null } = refreshBuyer
+        if (status === 200) {
+          const allBuyersCopy = structuredClone(allBuyers || [])
+          const removeOldBuyer = allBuyersCopy?.filter(b => b?._id?.toString() !== singlePost?._id?.toString())
+          dispatch(setPostById(object))
+          dispatch(setAllPosts([...removeOldBuyer, object]))
+        }
+        dispatch(setFooterMessage({ message, status }))
+      }
+    }
   }
 
   function filterByRange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -205,21 +250,22 @@ export default function PostByIdPage() {
       postMatchesOrderBy = postMatchesOrderBy.sort((a, b) => parseDate(a?.created_at).getTime() - parseDate(b?.created_at).getTime())
     }
     setPostMatchesToShow(postMatchesOrderBy)
-  }, [orderBy, postMatchesToShow])
+    // }, [orderBy, postMatchesToShow]) infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderBy])
+
 
   function handleEnbaleEdit() {
     setEnableEdit(!enableEdit)
   }
 
   async function handleDeletePost() {
-    const allMatchesCopy = structuredClone(allMatches || [])
-    const matchesPost = allMatchesCopy?.filter(m =>
-      (m?.buyerPost === singlePost?._id.toString() || m?.sellerPost === singlePost?._id.toString())
-    )
-    if (matchesPost?.length > 0) {
-      dispatch(setFooterMessage({ message: `Cannot delete post, currently has > ${matchesPost?.length} < matches.`, status: 409 }))
+    const matchesPost = [...(allMatches || [])]?.filter(m =>
+      (m?.buyerPost === singlePost?._id.toString() || m?.sellerPost === singlePost?._id.toString())).length
+    if (matchesPost > 0) {
+      dispatch(setFooterMessage({ message: `Cannot delete post, currently has > ${matchesPost} < matches.`, status: 409 }))
     } else {
-      const deletedPost = await deletePost(singlePost._id)
+      const deletedPost = await deletePost(singlePost?._id)
       if (deletedPost) {
         const { message, status }: { message: string, status: number } = deletedPost
         dispatch(setFooterMessage({ message, status }))
@@ -227,275 +273,305 @@ export default function PostByIdPage() {
           const allPostsCopy = structuredClone(allPosts || [])
           const postRemoved = allPostsCopy?.filter(b => b?._id?.toString() !== singlePost?._id?.toString())
           dispatch(setAllPosts(postRemoved))
+          dispatch(setPostById(null))
+          setExecuteRedirect(true)
         }
+      } else {
+        dispatch(setFooterMessage({ message: "Failed delete post", status: 409 }))
       }
     }
   }
 
+  function handleEnbaleDelete(e: React.ChangeEvent<HTMLInputElement>) {
+    const { checked } = e.target
+    if (checked) {
+      setEnableDelete(true)
+    } else {
+      setEnableDelete(false)
+    }
+  }
+
   return (
-    <div className="flex flex-col h-full border rounded-t-lg">
+    <div className="flex flex-wrap h-full border rounded-t-lg">
+      <div className="w-auto min-w-[50%] flex flex-wrap text-[25px] p-3 gap-5">
+        {
+          !singlePost
+            ? "There is no Buyer selected"
+            : <div className="flex flex-col gap-3 w-full">
+              <div className="flex flex-wrap justify-between h-fit">
+                <div className="flex gap-4">
+                  <div className="text-[15px]">
+                    {singlePostToShow?.disable ? "Disable" : "Enable"}
+                  </div>
+                  <div className="text-[15px]">
+                    {singlePostToShow?.is_active ? "Active" : "Inactive"}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    className="border-2 border-black rounded-[9999px]"
+                    onClick={() => handleRefresh()}
+                  >
+                    <IconRefresh className="h-[32px] w-[32px]" />
+                  </button>
+                  {
+                    enableEdit
+                      ? <button
+                        onClick={() => handleEnbaleEdit()}
+                      >
+                        <IconEditOff className="h-[35px] w-[35px]" />
+                      </button>
+                      : <button
+                        onClick={() => handleEnbaleEdit()}
+                      >
+                        <IconEdit className="h-[35px] w-[35px]" />
+                      </button>
+                  }
 
-      <div className="w-full flex flex-wrap justify-around">
-        <div className="text-[25px] p-2 flex">
-          <div className="px-2">
-            {
-              singlePostToShow?.buyer
-                ? <>
-                  Buyer: {singlePostToShow?.buyer}
-                </>
-                : <>
-                  Seller: {singlePostToShow?.seller}
-                </>
-            }
-          </div>
-          <div>
-            <button
-              className="border-2 border-black rounded-[9999px] p-[2px]"
-              onClick={() => handleRefresh()}
-            >
-              <IconRefresh />
-            </button>
-          </div>
-          <div className="px-2">
-            {
-              enableEdit
-                ? <button
-                  onClick={() => handleEnbaleEdit()}
-                >
-                  <IconEditOff className="h-[35px] w-[35px]" />
-                </button>
-                : <button
-                  onClick={() => handleEnbaleEdit()}
-                >
-                  <IconEdit className="h-[35px] w-[35px]" />
-                </button>
-            }
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      onChange={handleEnbaleDelete}
+                    />
+                    <button
+                      onClick={handleDeletePost}
+                      disabled={!enableDelete}
+                    >
+                      <IconTrashX className={`h-[35px] w-[35px] ${enableDelete ? "text-red-500" : ""}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-          </div>
-          <div className="text-[15px]">
-            {singlePostToShow?.disable ? "Disable" : "Enable"}
-          </div>
-          <div className="text-[15px]">
-            {singlePostToShow?.is_active ? "Active" : "Inactive"}
-          </div>
-          <div>
-            <button
-              onClick={() => handleDeletePost()}>
-              <IconTrashX className="h-[35px] w-[35px]" />
-            </button>
-          </div>
-        </div>
+              <div className="text-[25px]">
+                <div className="">
+                  {
+                    singlePostToShow?.buyer
+                      ? <>
+                        Buyer: {allBuyers?.find(b => b?._id?.toString() === singlePostToShow?.buyer)?.name}
+                      </>
+                      : <>
+                        Seller: {allSellers?.find(b => b?._id?.toString() === singlePostToShow?.seller)?.name}
+                      </>
+                  }
+                </div>
+              </div>
+
+              <div className="text-[25px]">
+                Category: {allCategories?.find(b => b?._id?.toString() === singlePostToShow?.category)?.name}
+              </div>
+
+              <div className="text-[25px]">
+                $ {singlePostToShow?.price?.toLocaleString()}
+              </div>
+
+              <div className="text-[25px]">
+                Matches: {postMatches?.current?.length}
+              </div>
+
+              <div className="text-[25px]">
+                Description: {singlePost?.description}
+              </div>
+
+              {
+                postMatches?.current?.length === 0
+                  ? <div className="py-4 text-[24px]">
+                    There are no matches for this post
+                  </div>
+                  : <>
+                    <div className="w-full py-2 text-center items-center flex justify-around flex-wrap">
+                      <div className="w-full flex flex-wrap justify-around">
+                        <div className="w-[250px] px-4 py-2">
+                          {
+                            singlePostToShow?.buyer
+                              ? <div className="w-[250px] px-4 py-2">
+                                <SellersInput
+                                  sellerNames={namesToFilter || []}
+                                  handleFilter={handleFilterMatchByName}
+                                />
+                              </div>
+
+                              : <BuyersInput
+                                buyerNames={namesToFilter || []}
+                                handleFilter={handleFilterMatchByName}
+                              />
+                          }
+                        </div>
+                        <div className="w-auto flex px-1 items-center flex-wrap justify-around">
+                          <div className="flex py-1">
+                            <div className="px-1 flex items-center">
+                              <label
+                                htmlFor="min-profit"
+                              >
+                                min:
+                              </label>
+                            </div>
+                            <div className="px-1">
+                              <input
+                                name="min"
+                                className="w-[75px] p-1"
+                                id="min-profit"
+                                type="number"
+                                onChange={(e) => filterByRange(e)}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex py-1">
+                            <div className="px-1 flex items-center">
+                              <label
+                                htmlFor="max-profit"
+                              >
+                                MAX:
+                              </label>
+                            </div>
+                            <div className="px-1">
+                              <input
+                                name="MAX"
+                                className="w-[75px] p-1"
+                                id="max-price"
+                                type="number"
+                                onChange={(e) => filterByRange(e)}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        {/* </div> */}
+
+                        {/* <div className="w-auto flex flex-wrap justify-around"> */}
+                        <div className="w-auto flex flex-wrap justify-around py-2">
+
+                          <div className="flex py-1">
+                            <div className="flex items-center">
+                              <input
+                                onClick={(e) => handleOrderBy(e)}
+                                value="Lower"
+                                name="order-price-time"
+                                type="radio"
+                                id="lower-input-order-price"
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <label
+                                className="px-2"
+                                htmlFor="lower-input-order-price"
+                              >
+                                Lower
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="flex py-1">
+                            <div className="flex items-center">
+                              <input
+                                onClick={(e) => handleOrderBy(e)}
+                                value="Higher"
+                                name="order-price-time"
+                                type="radio"
+                                id="higher-input-order-price"
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <label
+                                className="px-2"
+                                htmlFor="higher-input-order-price"
+                              >
+                                Higher
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="w-auto flex flex-wrap justify-around py-2">
+
+                          <div className="flex py-1">
+                            <div className="flex items-center">
+                              <input
+                                onClick={(e) => handleOrderBy(e)}
+                                value="Newest"
+                                name="order-price-time"
+                                type="radio"
+                                id="newest-input-order-time"
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <label
+                                className="px-2"
+                                htmlFor="newest-input-order-time"
+                              >
+                                Newest
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="flex py-1">
+                            <div className="flex items-center">
+                              <input
+                                onClick={(e) => handleOrderBy(e)}
+                                value="Oldest"
+                                name="order-price-time"
+                                type="radio"
+                                id="oldest-input-order-time"
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <label
+                                className="px-2"
+                                htmlFor="oldest-input-order-time"
+                              >
+                                Oldest
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="h-[200px] overflow-y-auto whitespace-nowrap overflow-x-auto">
+                      <div className="text-[20px] flex flex-col px-2 ">
+                        {
+                          postMatchesToShow?.length === 0
+                            ? "There are no matches with those filters"
+                            : postMatchesToShow?.map(p => {
+                              const currentDate = p?.created_at?.slice(4, 10)
+                              const currentHour = p?.created_at?.slice(16, 24)
+
+                              const findSellerPost = allPosts?.find(p => p?._id?.toString() === p?._id?.toString())
+                              const findSeller = allSellers?.find(s => s?._id?.toString() === findSellerPost?.seller)
+
+                              const findBuyerPost = allPosts?.find(p => p?._id?.toString() === p?._id?.toString())
+                              const findBuyer = allBuyers?.find(b => b?._id?.toString() === findBuyerPost?.buyer)
+
+                              return (
+                                <div
+                                  key={p?._id}
+                                  className="px-2"
+                                >
+                                  {
+                                    singlePostToShow?.buyer
+                                      ? <div>
+                                        Seller: {findSeller?.name} - $ {findSellerPost?.price} | Profit: $ {p?.profit.toLocaleString()} | {currentDate} {currentHour}
+                                      </div>
+                                      : <div>
+                                        Buyer: {findBuyer?.name} - $ {findBuyerPost?.price} | Profit: $ {p?.profit.toLocaleString()} | {currentDate} {currentHour}
+                                      </div>
+                                  }
+                                </div>
+                              )
+                            })
+                        }
+                      </div>
+                    </div>
+                  </>
+              }
+            </div>
+        }
       </div>
+
 
       {
         !enableEdit
-          ? <>
-            <div className="w-full flex flex-wrap justify-around">
-              <div className="text-[25px] p-2 flex">
-                Category: {singlePostToShow?.category}
-              </div>
-              {/* </div> */}
-              <div className="text-[25px] p-2 flex">
-                $ {singlePostToShow?.price}
-              </div>
-              {/* <div className="w-full flex flex-wrap justify-around"> */}
-              <div className="text-[25px] p-2 flex">
-                Matches: {postMatches?.current?.length}
-              </div>
-            </div>
-
-            {
-              postMatches?.current?.length === 0
-                ? <div className="w-full py-4 text-[24px] text-center items-center flex justify-around flex-wrap">
-                  There are no matches for this post
-                </div>
-                : <>
-                  <div className="w-full py-2 text-center items-center flex justify-around flex-wrap">
-                    <div className="w-full flex flex-wrap justify-around">
-                      <div className="w-[250px] px-4 py-2">
-                        {
-                          singlePostToShow?.buyer
-                            ? <div className="w-[250px] px-4 py-2">
-                              <SellersInput
-                                itemsToShow={namesToFilter || []}
-                                handleFilter={handleFilterMatchByName}
-                              />
-                            </div>
-
-                            : <BuyersInput
-                              itemsToShow={namesToFilter || []}
-                              handleFilter={handleFilterMatchByName}
-                            />
-                        }
-                      </div>
-                      <div className="w-auto flex px-1 items-center flex-wrap justify-around">
-                        <div className="flex py-1">
-                          <div className="px-1 flex items-center">
-                            <label
-                              htmlFor="min-profit"
-                            >
-                              min:
-                            </label>
-                          </div>
-                          <div className="px-1">
-                            <input
-                              name="min"
-                              className="w-[75px] p-1"
-                              id="min-profit"
-                              type="number"
-                              onChange={(e) => filterByRange(e)}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex py-1">
-                          <div className="px-1 flex items-center">
-                            <label
-                              htmlFor="max-profit"
-                            >
-                              MAX:
-                            </label>
-                          </div>
-                          <div className="px-1">
-                            <input
-                              name="MAX"
-                              className="w-[75px] p-1"
-                              id="max-price"
-                              type="number"
-                              onChange={(e) => filterByRange(e)}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      {/* </div> */}
-
-                      {/* <div className="w-auto flex flex-wrap justify-around"> */}
-                      <div className="w-auto flex flex-wrap justify-around py-2">
-
-                        <div className="flex py-1">
-                          <div className="flex items-center">
-                            <input
-                              onClick={(e) => handleOrderBy(e)}
-                              value="Lower"
-                              name="order-price-time"
-                              type="radio"
-                              id="lower-input-order-price"
-                            />
-                          </div>
-                          <div className="flex items-center">
-                            <label
-                              className="px-2"
-                              htmlFor="lower-input-order-price"
-                            >
-                              Lower
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="flex py-1">
-                          <div className="flex items-center">
-                            <input
-                              onClick={(e) => handleOrderBy(e)}
-                              value="Higher"
-                              name="order-price-time"
-                              type="radio"
-                              id="higher-input-order-price"
-                            />
-                          </div>
-                          <div className="flex items-center">
-                            <label
-                              className="px-2"
-                              htmlFor="higher-input-order-price"
-                            >
-                              Higher
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="w-auto flex flex-wrap justify-around py-2">
-
-                        <div className="flex py-1">
-                          <div className="flex items-center">
-                            <input
-                              onClick={(e) => handleOrderBy(e)}
-                              value="Newest"
-                              name="order-price-time"
-                              type="radio"
-                              id="newest-input-order-time"
-                            />
-                          </div>
-                          <div className="flex items-center">
-                            <label
-                              className="px-2"
-                              htmlFor="newest-input-order-time"
-                            >
-                              Newest
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="flex py-1">
-                          <div className="flex items-center">
-                            <input
-                              onClick={(e) => handleOrderBy(e)}
-                              value="Oldest"
-                              name="order-price-time"
-                              type="radio"
-                              id="oldest-input-order-time"
-                            />
-                          </div>
-                          <div className="flex items-center">
-                            <label
-                              className="px-2"
-                              htmlFor="oldest-input-order-time"
-                            >
-                              Oldest
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="h-[200px] overflow-y-auto whitespace-nowrap overflow-x-auto">
-                    <div className="text-[20px] flex flex-col px-2 ">
-                      {
-                        postMatchesToShow?.length === 0
-                          ? "There are no matches with those filters"
-                          : postMatchesToShow?.map(p => {
-                            const currentDate = p?.created_at?.slice(4, 10)
-                            const currentHour = p?.created_at?.slice(16, 24)
-
-                            const findSellerPost = allPosts?.find(p => p?._id?.toString() === p?._id?.toString())
-                            const findSeller = allSellers?.find(s => s?._id?.toString() === findSellerPost?.seller)
-
-                            const findBuyerPost = allPosts?.find(p => p?._id?.toString() === p?._id?.toString())
-                            const findBuyer = allBuyers?.find(b => b?._id?.toString() === findBuyerPost?.buyer)
-
-                            return (
-                              <div
-                                key={p?._id}
-                                className="px-2"
-                              >
-                                {
-                                  singlePostToShow?.buyer
-                                    ? <div>
-                                      Seller: {findSeller?.name} - $ {findSellerPost?.price} | Profit: $ {p?.profit.toLocaleString()} | {currentDate} {currentHour}
-                                    </div>
-                                    : <div>
-                                      Buyer: {findBuyer?.name} - $ {findBuyerPost?.price} | Profit: $ {p?.profit.toLocaleString()} | {currentDate} {currentHour}
-                                    </div>
-                                }
-                              </div>
-                            )
-                          })
-                      }
-                    </div>
-                  </div>
-                </>
-            }
-          </>
+          ? <></>
           : <EditPostForm setEnableEdit={setEnableEdit} />
       }
     </div>

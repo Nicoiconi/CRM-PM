@@ -216,6 +216,12 @@ export default function AddPostForm() {
     dispatch(setFooterMessage({ message: "Get Categories failed", status: 409 }))
   }
 
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    const newValue = value.replace(/\D/g, "");
+    e.target.value = newValue;
+  }
+
   console.log(newPost)
 
   return (
@@ -352,14 +358,14 @@ export default function AddPostForm() {
 
           <div className="">
             <input
-              // className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              className="rounded w-[100px] text-right"
+              className="rounded w-[100px] text-right px-1"
               id="price-input"
-              type="number"
+              type="text"
               name="price"
               onChange={(e) => handleNewPost(e)}
               value={newPost?.price}
               placeholder="Price"
+              onInput={handlePriceChange}
             />
             {
               newPost?.price === 0
@@ -389,7 +395,7 @@ export default function AddPostForm() {
               value={newPost?.description}
               onChange={(e) => handleNewPost(e)}
               // className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              className="w-full p-1 rounded"
+              className="w-full px-1 rounded"
               placeholder="What ever you want"
             />
           </div>
