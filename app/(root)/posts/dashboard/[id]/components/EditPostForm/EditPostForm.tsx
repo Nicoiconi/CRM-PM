@@ -173,7 +173,7 @@ export default function EditPostForm({ setEnableEdit }: Props) {
         <div>
           <label
             className="pr-3"
-            htmlFor="disable-input"
+            htmlFor="disabled-input"
           >
             Price
           </label>
@@ -193,14 +193,14 @@ export default function EditPostForm({ setEnableEdit }: Props) {
       <div className="py-1">
         <label
           className="pr-3"
-          htmlFor="disable-input"
+          htmlFor="disabled-input"
         >
-          {singlePost?.disable ? "Enable?" : "Disable?"}
+          {singlePost?.disabled ? "Enabled?" : "Disabled?"}
         </label>
         <input
-          id="disable-input"
+          id="disabled-input"
           type="checkbox"
-          name="disable"
+          name="disabled"
           onChange={(e) => handleEditBooleansPost(e)}
         />
       </div>
