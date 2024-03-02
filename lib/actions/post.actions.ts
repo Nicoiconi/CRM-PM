@@ -48,6 +48,11 @@ export async function createPost(post: CreatePostParams) {
       const buyerPostOwner = await Buyer.findById(newPost?.buyer)
       if (buyerPostOwner) {
         postOwnerName = buyerPostOwner?.name
+        await Buyer.findByIdAndUpdate(
+          { _id: buyerPostOwner?._id },
+          { $push: { posts: newPost?._id } },
+          { new: true }
+        )
       }
     }
 
@@ -55,6 +60,11 @@ export async function createPost(post: CreatePostParams) {
       const sellerPostOwner = await Seller.findById(newPost?.seller)
       if (sellerPostOwner) {
         postOwnerName = sellerPostOwner?.name
+        await Seller.findByIdAndUpdate(
+          { _id: sellerPostOwner?._id },
+          { $push: { posts: newPost?._id } },
+          { new: true }
+        )
       }
     }
 
@@ -165,6 +175,20 @@ export async function deletePost(postId: string) {
     const deletedPost = await Post.findByIdAndDelete(postToDelete._id)
 
     if (!deletedPost) return { message: `Post delete failed.`, status: 409, object: null }
+
+    if (postToDelete?.buyer) {
+      const buyerPostOwner = await Buyer.findById(postToDelete?.buyer)
+      if (buyerPostOwner) {
+        await Buyer.findByIdAndUpdate({ _id: buyerPostOwner?._id }, { $pull: { posts: postToDelete?._id } })
+      }
+    }
+
+    if (postToDelete?.seller) {
+      const sellerPostOwner = await Seller.findById(postToDelete?.seller)
+      if (sellerPostOwner) {
+        await Seller.findByIdAndUpdate({ _id: sellerPostOwner?._id }, { $pull: { posts: postToDelete?._id } })
+      }
+    }
 
     revalidatePath("/")
 
