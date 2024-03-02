@@ -14,6 +14,9 @@ import { IconCaretUpFilled } from "@tabler/icons-react"
 interface FilterBy {
   category?: string
   name?: string
+  is_active?: string
+  disabled?: string
+  [key: string]: string | boolean | undefined
 }
 
 export default function PostsDashboard() {
@@ -30,13 +33,13 @@ export default function PostsDashboard() {
   // const [buyerCategoryNames, setBuyerCategoryNames] = useState<string[]>()
   const [buyerPostsToShow, setBuyerPostsToShow] = useState<Post[]>()
   const [buyerNames, setBuyerNames] = useState<string[]>()
-  const [buyersFilterBy, setBuyersFilterBy] = useState<FilterBy>()
+  const [buyerPostsFilterBy, setBuyerPostsFilterBy] = useState<FilterBy>()
 
   const sellerPosts = useRef<Post[]>()
   // const [sellerCategoryNames, setSellerCategoryNames] = useState<string[]>()
   const [sellerPostsToShow, setSellersPostsToShow] = useState<Post[]>()
   const [sellerNames, setSellerNames] = useState<string[]>()
-  const [sellersFilterBy, setSellersFilterBy] = useState<FilterBy>()
+  const [sellerPostsFilterBy, setSellerPostsFilterBy] = useState<FilterBy>()
 
   const [hideBuyerPosts, setHideBuyerPosts] = useState(false)
   const [hideSellerPosts, setHideSellerPosts] = useState(false)
@@ -92,8 +95,8 @@ export default function PostsDashboard() {
   useEffect(() => {
     let buyerPostsFilteredBy = structuredClone(buyerPosts.current || [])
 
-    if (buyersFilterBy?.category) {
-      const findCategory = allCategories?.find(c => c?.name === buyersFilterBy?.category)
+    if (buyerPostsFilterBy?.category) {
+      const findCategory = allCategories?.find(c => c?.name === buyerPostsFilterBy?.category)
       buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(p => p?.category === findCategory?._id?.toString())
 
       const postsBuyerIds = buyerPostsFilteredBy?.map(pb => pb?.buyer)
@@ -104,7 +107,7 @@ export default function PostsDashboard() {
       setBuyerNames(uniqueBuyerNamesArray)
     }
 
-    if (!buyersFilterBy?.category) {
+    if (!buyerPostsFilterBy?.category) {
       const postsBuyerIds = buyerPostsFilteredBy?.map(pb => pb?.buyer)
       const uniqueBuyerNames = new Set([...allBuyers || []].map(b => {
         if (postsBuyerIds?.includes(b?._id?.toString())) return b?.name
@@ -113,19 +116,43 @@ export default function PostsDashboard() {
       setBuyerNames(uniqueBuyerNamesArray)
     }
 
-    if (buyersFilterBy?.name) {
-      const buyerByName = allBuyers?.find(b => b?.name === buyersFilterBy?.name)
+    if (buyerPostsFilterBy?.name) {
+      const buyerByName = allBuyers?.find(b => b?.name === buyerPostsFilterBy?.name)
       buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(p => p?.buyer === buyerByName?._id?.toString())
     }
 
+    if (buyerPostsFilterBy?.disabled) {
+      if (buyerPostsFilterBy?.disabled === "enabled") {
+        buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(b => !b?.disabled)
+      }
+      if (buyerPostsFilterBy?.disabled === "disabled") {
+        buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(b => b?.disabled)
+      }
+      if (buyerPostsFilterBy?.disabled === "all") {
+        buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(b => !b?.disabled || b?.disabled)
+      }
+    }
+
+    if (buyerPostsFilterBy?.is_active) {
+      if (buyerPostsFilterBy?.is_active === "active") {
+        buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(b => b?.is_active)
+      }
+      if (buyerPostsFilterBy?.is_active === "inactive") {
+        buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(b => !b?.is_active)
+      }
+      if (buyerPostsFilterBy?.is_active === "all") {
+        buyerPostsFilteredBy = buyerPostsFilteredBy?.filter(b => !b?.is_active || b?.is_active)
+      }
+    }
+
     setBuyerPostsToShow(buyerPostsFilteredBy)
-  }, [allBuyers, allCategories, buyersFilterBy])
+  }, [allBuyers, allCategories, buyerPostsFilterBy])
 
   useEffect(() => {
     let sellerPostsFilteredBy = structuredClone(sellerPosts.current || [])
 
-    if (sellersFilterBy?.category) {
-      const findCategory = allCategories?.find(c => c?.name === sellersFilterBy?.category)
+    if (sellerPostsFilterBy?.category) {
+      const findCategory = allCategories?.find(c => c?.name === sellerPostsFilterBy?.category)
       sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(p => p?.category === findCategory?._id?.toString())
 
       const postsSellerIds = sellerPostsFilteredBy?.map(s => s?.seller)
@@ -136,7 +163,7 @@ export default function PostsDashboard() {
       setSellerNames(uniqueSellerNamesArray)
     }
 
-    if (!sellersFilterBy?.category) {
+    if (!sellerPostsFilterBy?.category) {
       const postsSellerIds = sellerPostsFilteredBy?.map(s => s?.seller)
       const uniqueSellerNames = new Set([...allSellers || []].map(s => {
         if (postsSellerIds?.includes(s?._id?.toString())) return s?.name
@@ -145,22 +172,46 @@ export default function PostsDashboard() {
       setSellerNames(uniqueSellerNamesArray)
     }
 
-    if (sellersFilterBy?.name) {
-      const sellerByName = allSellers?.find(s => s?.name === sellersFilterBy?.name)
+    if (sellerPostsFilterBy?.name) {
+      const sellerByName = allSellers?.find(s => s?.name === sellerPostsFilterBy?.name)
       sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(p => p?.seller === sellerByName?._id?.toString())
     }
 
+    if (sellerPostsFilterBy?.disabled) {
+      if (sellerPostsFilterBy?.disabled === "enabled") {
+        sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(s => !s?.disabled)
+      }
+      if (sellerPostsFilterBy?.disabled === "disabled") {
+        sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(s => s?.disabled)
+      }
+      if (sellerPostsFilterBy?.disabled === "all") {
+        sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(s => !s?.disabled || s?.disabled)
+      }
+    }
+
+    if (sellerPostsFilterBy?.inactive) {
+      if (sellerPostsFilterBy?.is_active === "active") {
+        sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(s => s?.is_active)
+      }
+      if (sellerPostsFilterBy?.is_active === "inactive") {
+        sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(s => !s?.is_active)
+      }
+      if (sellerPostsFilterBy?.is_active === "all") {
+        sellerPostsFilteredBy = sellerPostsFilteredBy?.filter(s => !s?.is_active || s?.is_active)
+      }
+    }
+
     setSellersPostsToShow(sellerPostsFilteredBy)
-  }, [allSellers, allCategories, sellersFilterBy])
+  }, [allSellers, allCategories, sellerPostsFilterBy])
 
   function handleFilterPostsByCategory(value: string) {
-    setBuyersFilterBy(prevState => {
+    setBuyerPostsFilterBy(prevState => {
       return {
         ...prevState,
         category: value
       }
     })
-    setSellersFilterBy(prevState => {
+    setSellerPostsFilterBy(prevState => {
       return {
         ...prevState,
         category: value
@@ -169,7 +220,7 @@ export default function PostsDashboard() {
   }
 
   function handleFilterBuyersByName(value: string) {
-    setBuyersFilterBy(prevState => {
+    setBuyerPostsFilterBy(prevState => {
       return {
         ...prevState,
         name: value
@@ -178,12 +229,28 @@ export default function PostsDashboard() {
   }
 
   function handleFilterSellersByName(value: string) {
-    setSellersFilterBy(prevState => {
+    setSellerPostsFilterBy(prevState => {
       return {
         ...prevState,
         name: value
       }
     })
+  }
+
+  function handleFilterBuyersByBooleans(e: React.ChangeEvent<HTMLSelectElement>) {
+    const { name, value } = e.target
+    setBuyerPostsFilterBy(prevState => ({
+      ...prevState,
+      [name]: value
+    }))
+  }
+
+  function handleFilterSellersByBooleans(e: React.ChangeEvent<HTMLSelectElement>) {
+    const { name, value } = e.target
+    setSellerPostsFilterBy(prevState => ({
+      ...prevState,
+      [name]: value
+    }))
   }
 
   function handleHideBuyerPosts(value: boolean) {
@@ -242,14 +309,6 @@ export default function PostsDashboard() {
           </div>
 
           <div className={hideBuyerPosts ? "hidden" : ""}>
-            {/* <div className="flex justify-center ">
-              <div className="w-[250px]">
-                <CategoriesInput
-                  handleFilter={handleFilterBuyersByCategory}
-                  specificCategoryNames={buyerCategoryNames}
-                />
-              </div>
-            </div> */}
             <div className="flex justify-center">
               <div className="w-[250px]">
                 <BuyersInput
@@ -258,6 +317,45 @@ export default function PostsDashboard() {
                 />
               </div>
             </div>
+
+            <div className="flex justify-around py-2">
+              <select
+                name="is_active"
+                id=""
+                onChange={(e) => handleFilterBuyersByBooleans(e)}
+                className="w-[100px]"
+                value={buyerPostsFilterBy?.is_active}
+              >
+                <option value="all">
+                  All
+                </option>
+                <option value="active">
+                  Active
+                </option>
+                <option value="inactive">
+                  Inactive
+                </option>
+              </select>
+
+              <select
+                name="disabled"
+                id=""
+                // onChange={(e) => handleFilterBuyerPostsByBooleans(e)}
+                className="w-[100px]"
+              // value={buyerPostsFilterBy?.disabled}
+              >
+                <option value="all">
+                  All
+                </option>
+                <option value="enabled">
+                  Enabled
+                </option>
+                <option value="disabled">
+                  Disabled
+                </option>
+              </select>
+            </div>
+
             <div className="px-2 py-1">
               {
                 buyerPostsToShow?.map(p => {
@@ -267,9 +365,9 @@ export default function PostsDashboard() {
                   return (
                     <div
                       key={p?._id}
-                      className="flex border p-2 items-center buyer-bg-color text-black text-[18px] font-bold"
+                      className="flex border p-2 items-center buyer-bg-color font-bold"
                     >
-                      <div>
+                      <div className="text-black">
                         <Link
                           onClick={() => handleSetById(p?._id)}
                           href={`/posts/dashboard/${p?._id}`}
@@ -277,8 +375,23 @@ export default function PostsDashboard() {
                           <IconExternalLink className="m-1" />
                         </Link>
                       </div>
+
                       <div>
-                        {`${currentPostCategory?.name} - ${currentPostBuyer?.name} - $ ${p?.price.toLocaleString()} - ${postMatches} matches`}
+                        <div className="text-[16px] flex gap-2">
+                          <div className={p?.is_active ? "text-green-400" : "text-zinc-800"}>
+                            {p?.is_active ? "Active" : "Inactive"}
+                          </div>
+                          <div>
+                            -
+                          </div>
+                          <div className={p?.disabled ? "text-zinc-800" : "text-green-400"}>
+                            {p?.disabled ? "Disabled" : "Enabled"}
+                          </div>
+                        </div>
+
+                        <div className="text-black text-[18px]">
+                          {`${currentPostCategory?.name} - ${currentPostBuyer?.name} - $ ${p?.price.toLocaleString()} - ${postMatches} matches`}
+                        </div>
                       </div>
                     </div>
                   )
@@ -314,14 +427,6 @@ export default function PostsDashboard() {
           </div>
 
           <div className={hideSellerPosts ? "hidden" : ""}>
-            {/* <div className="flex justify-center">
-              <div className="w-[250px]">
-                <CategoriesInput
-                  handleFilter={handleFilterSellersByCategory}
-                  specificCategoryNames={sellerCategoryNames}
-                />
-              </div>
-            </div> */}
             <div className="flex justify-center">
               <div className="w-[250px]">
                 <SellersInput
@@ -330,6 +435,45 @@ export default function PostsDashboard() {
                 />
               </div>
             </div>
+
+            <div className="flex justify-around py-2">
+              <select
+                name="is_active"
+                id=""
+                onChange={(e) => handleFilterSellersByBooleans(e)}
+                className="w-[100px]"
+                value={sellerPostsFilterBy?.is_active}
+              >
+                <option value="all">
+                  All
+                </option>
+                <option value="active">
+                  Active
+                </option>
+                <option value="inactive">
+                  Inactive
+                </option>
+              </select>
+
+              <select
+                name="disabled"
+                id=""
+                onChange={(e) => handleFilterSellersByBooleans(e)}
+                className="w-[100px]"
+                value={sellerPostsFilterBy?.disabled}
+              >
+                <option value="all">
+                  All
+                </option>
+                <option value="enabled">
+                  Enabled
+                </option>
+                <option value="disabled">
+                  Disabled
+                </option>
+              </select>
+            </div>
+
             <div className="px-2 py-1">
               {
                 sellerPostsToShow?.map(p => {
@@ -349,8 +493,23 @@ export default function PostsDashboard() {
                           <IconExternalLink className="m-1" />
                         </Link>
                       </div>
+
                       <div>
-                        {`${currentPostCategory?.name} - ${currentPostSeller?.name} - $ ${p?.price} - ${postMatches} matches`}
+                        <div className="text-[16px] flex gap-2">
+                          <div className={p?.is_active ? "text-green-400" : "text-zinc-800"}>
+                            {p?.is_active ? "Active" : "Inactive"}
+                          </div>
+                          <div>
+                            -
+                          </div>
+                          <div className={p?.disabled ? "text-zinc-800" : "text-green-400"}>
+                            {p?.disabled ? "Disabled" : "Enabled"}
+                          </div>
+                        </div>
+
+                        <div>
+                          {`${currentPostCategory?.name} - ${currentPostSeller?.name} - $ ${p?.price} - ${postMatches} matches`}
+                        </div>
                       </div>
                     </div>
                   )
