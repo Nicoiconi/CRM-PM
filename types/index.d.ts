@@ -29,7 +29,7 @@ declare type User = {
   photo: string
   firstName: string
   lastName: string
-  disable: string
+  disabled: string
   is_active: string
   created_at: boolean
   modified_at: boolean
@@ -45,7 +45,7 @@ declare type CreateCategoryParams = {
 declare type UpdateCategoryParams = {
   name?: string
   description?: string
-  disable?: boolean
+  disabled?: boolean
   is_active?: boolean
   created_at?: sting
   modified_at?: sting
@@ -56,7 +56,7 @@ declare type Category = {
   userClerkId: sting
   name: sting
   description: sting
-  disable: boolean
+  disabled: boolean
   is_active: boolean
   created_at: sting
   modified_at: sting
@@ -77,7 +77,7 @@ declare type UpdatePostParams = {
   category?: string
   price?: number
   description?: string
-  disable?: boolean
+  disabled?: boolean
   is_active?: boolean
 }
 
@@ -89,7 +89,7 @@ declare type Post = {
   category: string
   price: number
   description?: string
-  disable: boolean
+  disabled: boolean
   is_active: boolean
   created_at: string
   modified_at: string
@@ -112,7 +112,7 @@ declare type UpdateClientParams = {
   description?: string
   email?: string
   phone?: string
-  disable?: boolean
+  disabled?: boolean
   is_active?: boolean
 }
 
@@ -126,7 +126,7 @@ declare type Client = {
   email: string
   phone?: string
   description?: string
-  disable: boolean
+  disabled: boolean
   is_active: boolean
   created_at: string
   modified_at: string
@@ -147,7 +147,7 @@ declare type UpdateMatchParams = {
   sellerPost?: string
   category?: string
   description?: string
-  disable?: boolean
+  disabled?: boolean
   is_active?: boolean
   created_at?: string
   updated_at?: string
@@ -162,7 +162,7 @@ declare type Match = {
   category: string
   profit: number
   description: string
-  disable: boolean
+  disabled: boolean
   is_active: boolean
   created_at: string
   updated_at: string
