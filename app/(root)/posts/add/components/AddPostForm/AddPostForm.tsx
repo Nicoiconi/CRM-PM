@@ -1,14 +1,11 @@
 "use client"
 
-import { createPost } from "@/lib/actions/post.actions"
 import { useEffect, useState } from "react"
-import { SubmitHandler, useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { addPostValidations } from "../../validiations/addPostValidations"
-import { Button } from "@/components/ui/button"
 import { useDispatch, useSelector } from "react-redux"
-import { setAllPosts, setPostById } from "@/lib/redux/slices/postsSlice/postsSlice"
 import { redirect } from "next/navigation"
+
+import { createPost } from "@/lib/actions/post.actions"
+import { setAllPosts, setPostById } from "@/lib/redux/slices/postsSlice/postsSlice"
 import AutoCompleteInputNewForm from "../AutoCompleteInputNewForm/AutoCompleteInputNewForm"
 import { IconRefresh, IconSquareRoundedX } from "@tabler/icons-react"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
@@ -34,13 +31,16 @@ export default function AddPostForm() {
   const [newPost, setNewPost] = useState<CreatePostParams | undefined>()
   const [ownersForInput, setOwnersForInput] = useState<OwnersForInput[]>([])
   const [alreadyExistError, setAlreadyExistError] = useState(false)
-  const [executeRedirect, setExecuteRedirect] = useState(false)
+  const [executeRedirect, setExecuteRedirect] = useState<string | undefined>()
   const [selectedCategory, setSelectedCategory] = useState("")
   // console.log(newPost)  
 
   useEffect(() => {
-    if (executeRedirect) {
+    if (executeRedirect === "dashboard") {
       redirect("/posts/dashboard")
+    }
+    if (executeRedirect === "add") {
+      redirect("/posts/add")
     }
   }, [executeRedirect])
 
@@ -138,7 +138,9 @@ export default function AddPostForm() {
     })
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement, MouseEvent>, createOneMore: boolean
+  ) {
     e.preventDefault()
     if (
       newPost &&
@@ -165,7 +167,12 @@ export default function AddPostForm() {
             const allPostsCopy = structuredClone(allPosts || [])
             dispatch(setAllPosts([...allPostsCopy, object]))
             dispatch(setPostById(object))
-            setExecuteRedirect(true)
+            if (!createOneMore) {
+              setExecuteRedirect("dashboard")
+            }
+            if (createOneMore) {
+              setExecuteRedirect("add")
+            }
           }
           dispatch(setFooterMessage({ message, status }))
         }
@@ -190,7 +197,12 @@ export default function AddPostForm() {
             const allPostsCopy = structuredClone(allPosts || [])
             dispatch(setAllPosts([...allPostsCopy, object]))
             dispatch(setPostById(object))
-            setExecuteRedirect(true)
+            if (!createOneMore) {
+              setExecuteRedirect("dashboard")
+            }
+            if (createOneMore) {
+              setExecuteRedirect("add")
+            }
           }
           dispatch(setFooterMessage({ message, status }))
         }
@@ -222,10 +234,11 @@ export default function AddPostForm() {
     e.target.value = newValue;
   }
 
-  console.log(newPost)
+  // console.log(newPost)
 
   return (
-    <form onSubmit={(e) => handleSubmit(e)} className="w-1/2 p-2 shadow bg-dark-500 rounded border">
+    <form className="w-1/2 p-2 shadow bg-dark-500 rounded border">
+      {/* <form onSubmit={(e) => handleSubmit(e)} className="w-1/2 p-2 shadow bg-dark-500 rounded border"> */}
 
       <div className={`flex flex-wrap justify-around`}>
         {
@@ -241,15 +254,34 @@ export default function AddPostForm() {
                 <IconSquareRoundedX />
               </div>
             </div>
-            : <div>
+            : <div className="w-full">
               <div className="w-full flex-center p-4">
                 <h5>New Post</h5>
               </div>
               <div className="w-full flex-center p-4">
                 {
-
-                  (newPost?.seller || newPost?.buyer) && newPost?.category && newPost?.price
-                    ? <button type="submit">CREATE</button>
+                  (newPost?.seller || newPost?.buyer) &&
+                    newPost?.category &&
+                    newPost?.price &&
+                    newPost?.price > 0
+                    ? <div className="flex justify-around w-full">
+                      <div>
+                        <button
+                          type="submit"
+                          onClick={(e) => handleSubmit(e, false)}
+                        >
+                          CREATE
+                        </button>
+                      </div>
+                      <div>
+                        <button
+                          type="submit"
+                          onClick={(e) => handleSubmit(e, true)}
+                        >
+                          CREATE & ONE MORE
+                        </button>
+                      </div>
+                    </div>
                     : "Required field: Owner, Category and Price"
                 }
               </div>
@@ -363,7 +395,7 @@ export default function AddPostForm() {
               type="text"
               name="price"
               onChange={(e) => handleNewPost(e)}
-              value={newPost?.price}
+              value={newPost?.price || 0}
               placeholder="Price"
               onInput={handlePriceChange}
             />
@@ -392,7 +424,7 @@ export default function AddPostForm() {
             <textarea
               name="description"
               id="inputDescription"
-              value={newPost?.description}
+              value={newPost?.description || ""}
               onChange={(e) => handleNewPost(e)}
               // className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
               className="w-full px-1 rounded"
