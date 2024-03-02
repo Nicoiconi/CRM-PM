@@ -1,7 +1,7 @@
 "use client"
 
 import { getUserBy } from "@/lib/actions/user.actions"
-import { resetProperyValues } from "@/lib/database/props/resetProperyValues"
+import { resetProperyValues } from "@/lib/database/props/resetPropertyValues"
 import { auth } from "@clerk/nextjs"
 import { redirect } from "next/navigation"
 import { useState } from "react"
