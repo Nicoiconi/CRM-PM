@@ -16,7 +16,7 @@ interface BuyerToRender {
   posts: number
   matches: number
   is_active: string
-  disable: string
+  disabled: string
   created_at: string
 }
 
@@ -46,7 +46,7 @@ export default function MatchTableRow({ buyer }: Props) {
       posts: buyer?.posts?.length,
       matches: buyerMatches.length,
       is_active: buyer?.is_active?.toString(),
-      disable: buyer?.disable?.toString(),
+      disabled: buyer?.disabled?.toString(),
       created_at: buyer?.created_at
 
     })
@@ -85,7 +85,7 @@ export default function MatchTableRow({ buyer }: Props) {
         {buyerData?.is_active}
       </td>
       <td className="py-1 px-2">
-        {buyerData?.disable}
+        {buyerData?.disabled}
       </td>
       <td className="py-1 px-2">
         {buyerData?.created_at}

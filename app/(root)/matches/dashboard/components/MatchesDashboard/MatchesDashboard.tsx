@@ -148,12 +148,12 @@ export default function MatchesDashboard() {
         return a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
       })
     }
-    if (value === "disable") {
+    if (value === "disabled") {
       buyersOrdered.sort((a, b) => {
         return a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
       })
     }
-    if (value === "enable") {
+    if (value === "enabled") {
       buyersOrdered.sort((a, b) => {
         return a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
       })
@@ -359,7 +359,7 @@ export default function MatchesDashboard() {
                 <th className="py-1 px-2">
                   <div className="flex">
                     <div className="px-1 flex items-center">
-                      Disable?
+                      Disabled?
                     </div>
                     {
                       isFilteringByName
@@ -367,7 +367,7 @@ export default function MatchesDashboard() {
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleOrderBy("disable")}
+                              onClick={() => handleOrderBy("disabled")}
                               className="text-[10px]"
                             >
                               <IconArrowNarrowDown className="w-[20px] " />
@@ -375,7 +375,7 @@ export default function MatchesDashboard() {
                           </div>
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleOrderBy("enable")}
+                              onClick={() => handleOrderBy("enabled")}
                               className="text-[10px]"
                             >
                               <IconArrowNarrowUp className="w-[20px] " />

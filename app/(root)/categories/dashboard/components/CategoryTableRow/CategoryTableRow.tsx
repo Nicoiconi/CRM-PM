@@ -16,7 +16,7 @@ interface CategoryToRender {
   sellerPosts: number
   matches: number
   is_active: string
-  disable: string
+  disabled: string
   created_at: string
 }
 
@@ -41,8 +41,8 @@ export default function CategoryTableRow({ category }: Props) {
       buyerPosts: categoryBuyerPosts,
       sellerPosts: categorySellerPosts,
       matches: categoryMatches,
-      is_active: category?.is_active?.toString(),
-      disable: category?.disable?.toString(),
+      is_active: category?.is_active ? "Active" : "Deactive",
+      disabled: category?.disabled ? "Disabled" : "Enabled",
       created_at: category?.created_at
     })
   }, [allMatches, allPosts, category])
@@ -78,7 +78,7 @@ export default function CategoryTableRow({ category }: Props) {
         {categoryData?.is_active}
       </td>
       <td className="py-1 px-2">
-        {categoryData?.disable}
+        {categoryData?.disabled}
       </td>
       <td className="py-1 px-2">
         {categoryData?.created_at}

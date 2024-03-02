@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { redirect, usePathname } from "next/navigation"
+
 import { IconEdit, IconTrashX } from "@tabler/icons-react"
 import { IconEditOff, IconRefresh } from "@tabler/icons-react"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
@@ -301,7 +302,7 @@ export default function PostByIdPage() {
               <div className="flex flex-wrap justify-between h-fit">
                 <div className="flex gap-4">
                   <div className="text-[15px]">
-                    {singlePostToShow?.disable ? "Disable" : "Enable"}
+                    {singlePostToShow?.disabled ? "Disabled" : "Enabled"}
                   </div>
                   <div className="text-[15px]">
                     {singlePostToShow?.is_active ? "Active" : "Inactive"}

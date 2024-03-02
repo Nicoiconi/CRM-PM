@@ -1,13 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
+import { useSelector } from "react-redux"
 import Link from "next/link"
-
 import { IconExternalLink } from "@tabler/icons-react"
-import { getBuyerById } from "@/lib/actions/buyer.actions"
-import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
-import { setBuyerById } from "@/lib/redux/slices/buyersSlice/buyersSlice"
 
 interface Props {
   buyer: Client
@@ -21,13 +17,11 @@ interface BuyerToRender {
   matches: number
   description: string
   is_active: string
-  disable: string
+  disabled: string
   created_at: string
 }
 
 export default function BuyerTableRow({ buyer }: Props) {
-
-  const dispatch = useDispatch()
 
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
@@ -35,7 +29,6 @@ export default function BuyerTableRow({ buyer }: Props) {
   const [buyerData, setBuyerData] = useState<BuyerToRender>()
 
   useEffect(() => {
-
     const allCategoriesCopy = structuredClone(allCategories || [])
     const buyerCategories = allCategoriesCopy?.filter((c: Category) => buyer?.categories?.includes(c?._id))
     const uniqueCategoryNames = new Set(buyerCategories?.map((c: Category) => c?.name))
@@ -53,12 +46,12 @@ export default function BuyerTableRow({ buyer }: Props) {
       posts: buyer?.posts?.length,
       matches: buyerMatches.length,
       description: buyer?.description || "",
-      is_active: buyer?.is_active?.toString(),
-      disable: buyer?.disable?.toString(),
+      is_active: buyer?.is_active ? "Active" : "Deactive",
+      disabled: buyer?.disabled ? "Disabled" : "Enabled",
       created_at: buyer?.created_at
 
     })
-  }, [buyer])
+  }, [allCategories, allMatches, buyer])
 
   return (
     <tr className="border text-[20px]">
@@ -88,7 +81,7 @@ export default function BuyerTableRow({ buyer }: Props) {
         {buyerData?.is_active}
       </td>
       <td className="py-1 px-2">
-        {buyerData?.disable}
+        {buyerData?.disabled}
       </td>
       <td className="py-1 px-2">
         {buyerData?.created_at}

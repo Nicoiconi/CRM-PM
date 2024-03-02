@@ -35,7 +35,7 @@ export default function BuyerByIdPage() {
 
   useEffect(() => {
     if (executeRedirect) {
-      redirect("/sellers/dashboard")
+      redirect("/buyers/dashboard")
     }
   }, [executeRedirect])
 
@@ -54,7 +54,7 @@ export default function BuyerByIdPage() {
         dispatch(setFooterMessage({ message: "Get Buyer failed", status: 409 }))
       })()
     }
-  }, [])
+  }, [buyerId])
 
   useEffect(() => {
     setEnableEdit(false)
@@ -174,20 +174,21 @@ export default function BuyerByIdPage() {
 
   return (
     <div className="flex flex-wrap h-full border rounded-t-lg">
-      <div className="w-auto min-w-[50%] flex flex-wrap text-[25px] p-3 gap-5">
+      <div className="w-full md:w-auto md:min-w-[50%] flex flex-wrap text-[25px] p-3 gap-5">
         {
           !singleBuyer
             ? "There is no Buyer selected"
             : <div className="flex flex-col gap-3 w-full">
-              <div className="flex flex-wrap justify-between h-fit">
+              <div className="flex flex-wrap justify-around items-center h-fit">
                 <div className="flex gap-4">
                   <div className="text-[15px]">
-                    {singleBuyerToShow?.disable ? "Disable" : "Enable"}
+                    {singleBuyerToShow?.disabled ? "Disabled" : "Enabled"}
                   </div>
                   <div className="text-[15px]">
                     {singleBuyerToShow?.is_active ? "Active" : "Inactive"}
                   </div>
                 </div>
+
                 <div className="flex gap-2">
                   <button
                     className="border-2 border-black rounded-[9999px]"
@@ -223,6 +224,7 @@ export default function BuyerByIdPage() {
                   </div>
                 </div>
               </div>
+              
               <div className="">
                 Buyer: {singleBuyerToShow?.name}
               </div>

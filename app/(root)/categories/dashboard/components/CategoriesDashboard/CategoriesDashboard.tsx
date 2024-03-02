@@ -38,7 +38,6 @@ export default function CategoriesDashboard() {
       dispatch(setFooterMessage({ message, status }))
     }
   }
-  console.log("state", categoriesToRender)
 
   function handleFilterByName(value: string) {
     if (value) {
@@ -157,14 +156,14 @@ export default function CategoriesDashboard() {
         return a.is_active === b.is_active ? 0 : a.is_active ? 1 : -1
       })
     }
-    if (value === "disable") {
+    if (value === "disabled") {
       categoriesOrdered.sort((a, b) => {
-        return a.disable === b.disable ? 0 : a.disable ? -1 : 1
+        return a.disabled === b.disabled ? 0 : a.disabled ? -1 : 1
       })
     }
-    if (value === "enable") {
+    if (value === "enabled") {
       categoriesOrdered.sort((a, b) => {
-        return a.disable === b.disable ? 0 : a.disable ? 1 : -1
+        return a.disabled === b.disabled ? 0 : a.disabled ? 1 : -1
       })
     }
     setCategoriesToRender(categoriesOrdered)
@@ -397,7 +396,7 @@ export default function CategoriesDashboard() {
                 <th className="py-1 px-2">
                   <div className="flex">
                     <div className="px-1 flex items-center">
-                      Disable?
+                      Disabled?
                     </div>
                     {
                       isFilteringByName
@@ -405,7 +404,7 @@ export default function CategoriesDashboard() {
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleOrderBy("disable")}
+                              onClick={() => handleOrderBy("disabled")}
                               className="text-[10px]"
                             >
                               <IconArrowNarrowDown className="w-[20px] " />
@@ -413,7 +412,7 @@ export default function CategoriesDashboard() {
                           </div>
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleOrderBy("enable")}
+                              onClick={() => handleOrderBy("enabled")}
                               className="text-[10px]"
                             >
                               <IconArrowNarrowUp className="w-[20px] " />

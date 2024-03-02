@@ -168,7 +168,7 @@ export default function CategoryByIdPage() {
               <div className="flex flex-wrap justify-between h-fit">
                 <div className="flex gap-4">
                   <div className="text-[15px]">
-                    {singleCategoryToShow?.disable ? "Disable" : "Enable"}
+                    {singleCategoryToShow?.disabled ? "Disabled" : "Enabled"}
                   </div>
                   <div className="text-[15px]">
                     {singleCategoryToShow?.is_active ? "Active" : "Inactive"}
