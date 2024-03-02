@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 
 import { IconArrowNarrowDown, IconArrowNarrowUp, IconRefresh } from "@tabler/icons-react"
@@ -8,6 +8,13 @@ import { getAllSellers } from "@/lib/actions/seller.actions"
 import { setAllSellers } from "@/lib/redux/slices/sellersSlice/sellersSlice"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 
+interface FilterBy {
+  name?: string
+  is_active?: string
+  disabled?: string
+  [key: string]: string | boolean | undefined
+}
+
 export default function SellersDashboard() {
 
   const dispatch = useDispatch()
@@ -15,16 +22,20 @@ export default function SellersDashboard() {
   const { allSellers }: { allSellers: Client[] } = useSelector((state: Store) => state.sellers)
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
+  const { allPosts }: { allPosts: Post[] } = useSelector((state: Store) => state.posts)
 
+  const sellersRef = useRef<Client[]>()
   const [sellersToRender, setSellersToRender] = useState<Client[]>([])
+  const [filteredSellerNames, setFilteredSellerNames] = useState<string[] | undefined>(undefined)
   const [orderPressed, setOrderPressed] = useState("")
-  const [isFilteringByName, setIsFilteringByName] = useState(false)
+  const [sellersFilterBy, setSellersFilterBy] = useState<FilterBy>()
 
   useEffect(() => {
     const allSellersCopy = structuredClone(allSellers || [])
     const orderedSellers = allSellersCopy.sort((a, b) => {
       return a?.name?.toLowerCase().localeCompare(b?.name?.toLowerCase())
     })
+    sellersRef.current = orderedSellers
     setSellersToRender(orderedSellers)
   }, [allSellers])
 
@@ -40,14 +51,13 @@ export default function SellersDashboard() {
   }
 
   function handleFilterByName(value: string) {
-    if (value) {
-      // const sellersFilteredByName = [...(allSellers || [])].filter(b => b?.name?.toLowerCase() === value.toLowerCase())
-      const sellersFilteredByName = [...(allSellers || [])].filter(b => b?.name?.toLowerCase().includes(value.toLowerCase()))
-      setSellersToRender(sellersFilteredByName)
-      setIsFilteringByName(true)
-    } else {
-      setSellersToRender([...(allSellers || [])])
-      setIsFilteringByName(false)
+    setSellersFilterBy(prevState => ({
+      ...prevState,
+      name: value
+    }))
+
+    if (!sellersFilterBy?.disabled && !sellersFilterBy?.is_active) {
+      setFilteredSellerNames(undefined)
     }
   }
 
@@ -56,39 +66,90 @@ export default function SellersDashboard() {
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(time));
   }
 
+  function handleFilterSellersByBooleans(e: React.ChangeEvent<HTMLSelectElement>) {
+    const { name, value } = e.target
+    setSellersFilterBy(prevState => ({
+      ...prevState,
+      [name]: value
+    }))
+  }
+
+  useEffect(() => {
+    let sellersRefCopy = structuredClone(sellersRef?.current || [])
+
+    if (sellersFilterBy?.is_active) {
+      if (sellersFilterBy?.is_active === "active") {
+        sellersRefCopy = sellersRefCopy?.filter(s => s?.is_active)
+      }
+      if (sellersFilterBy?.is_active === "deactive") {
+        sellersRefCopy = sellersRefCopy?.filter(s => !s?.is_active)
+      }
+      if (sellersFilterBy?.is_active === "all") {
+        sellersRefCopy = sellersRefCopy?.filter(s => !s?.is_active || s?.is_active)
+      }
+    }
+
+    if (sellersFilterBy?.disabled) {
+      if (sellersFilterBy?.disabled === "enabled") {
+        sellersRefCopy = sellersRefCopy?.filter(s => !s?.disabled)
+      }
+      if (sellersFilterBy?.disabled === "disabled") {
+        sellersRefCopy = sellersRefCopy?.filter(s => s?.disabled)
+      }
+      if (sellersFilterBy?.disabled === "all") {
+        sellersRefCopy = sellersRefCopy?.filter(s => !s?.disabled || s?.disabled)
+      }
+    }
+
+    if (sellersFilterBy?.name) {
+      sellersRefCopy = sellersRefCopy?.filter(b => sellersFilterBy?.name && b?.name?.toLowerCase().includes(sellersFilterBy?.name?.toLowerCase()))
+    }
+
+
+    if ((sellersFilterBy?.is_active || sellersFilterBy?.disabled) && !sellersFilterBy?.name) {
+      const sellerNames = []
+      for (const eachSellerRefCopy of sellersRefCopy) {
+        sellerNames?.push(eachSellerRefCopy?.name)
+      }
+      const sellerNamesSorted = sellerNames?.sort((a, b) => a?.localeCompare(b))
+      setFilteredSellerNames(sellerNamesSorted)
+    }
+
+    setSellersToRender(sellersRefCopy)
+  }, [sellersFilterBy])
 
   function handleOrderBy(value: string) {
     setOrderPressed(value)
-    let sellersOrdered = structuredClone(allSellers || [])
+    let sellersToRenderOrdered = structuredClone(sellersToRender || [])
     if (value === "id-lower") {
-      sellersOrdered = [...(allSellers || [])].sort((a, b) => {
+      sellersToRenderOrdered = [...(allSellers || [])].sort((a, b) => {
         return a?._id?.toString().toLowerCase().localeCompare(b?._id?.toString().toLowerCase())
       })
     }
     if (value === "id-higher") {
-      sellersOrdered = [...(allSellers || [])].sort((a, b) => {
+      sellersToRenderOrdered = [...(allSellers || [])].sort((a, b) => {
         return b?._id?.toString().toLowerCase().localeCompare(a?._id?.toString().toLowerCase())
       })
     }
     if (value === "name-az") {
-      sellersOrdered = [...(allSellers || [])].sort((a, b) => {
+      sellersToRenderOrdered = [...(allSellers || [])].sort((a, b) => {
         return a?.name?.toString().toLowerCase().localeCompare(b?.name?.toString().toLowerCase())
       })
     }
     if (value === "name-za") {
-      sellersOrdered = [...(allSellers || [])].sort((a, b) => {
+      sellersToRenderOrdered = [...(allSellers || [])].sort((a, b) => {
         return b?.name?.toString().toLowerCase().localeCompare(a?.name?.toString().toLowerCase())
       })
     }
     if (value === "categories-lower") {
-      sellersOrdered = [...(allSellers || [])].sort((a, b) => {
+      sellersToRenderOrdered = [...(allSellers || [])].sort((a, b) => {
         const uniquePostsA = new Set(a.posts.map(post => {
-          const categoryPost = allCategories.find(c => c?._id === post)
-          return categoryPost?.name
+          const sellerPost = allPosts?.find(c => c?._id === post)
+          if (sellerPost) return sellerPost?.category
         }))
         const uniquePostsB = new Set(b.posts.map(post => {
-          const categoryPost = allCategories.find(c => c?._id === post)
-          return categoryPost?.name
+          const sellerPost = allPosts?.find(c => c?._id === post)
+          if (sellerPost) return sellerPost?.category
         }))
 
         const countUniquePostsA = uniquePostsA.size
@@ -98,14 +159,14 @@ export default function SellersDashboard() {
       })
     }
     if (value === "categories-higher") {
-      sellersOrdered = [...(allSellers || [])].sort((a, b) => {
+      sellersToRenderOrdered = [...(allSellers || [])].sort((a, b) => {
         const uniquePostsA = new Set(a.posts.map(post => {
-          const categoryPost = allCategories.find(c => c?._id === post)
-          return categoryPost?.name
+          const sellerPost = allPosts?.find(c => c?._id === post)
+          if (sellerPost) return sellerPost?.category
         }))
         const uniquePostsB = new Set(b.posts.map(post => {
-          const categoryPost = allCategories.find(c => c?._id === post)
-          return categoryPost?.name
+          const sellerPost = allPosts?.find(c => c?._id === post)
+          if (sellerPost) return sellerPost?.category
         }))
         const countUniquePostsA = uniquePostsA.size
         const countUniquePostsB = uniquePostsB.size
@@ -114,64 +175,62 @@ export default function SellersDashboard() {
       })
     }
     if (value === "less-posts") {
-      sellersOrdered.sort((a, b) => {
+      sellersToRenderOrdered.sort((a, b) => {
         return a?.posts?.length - b?.posts.length
       })
     }
     if (value === "more-posts") {
-      sellersOrdered.sort((a, b) => {
+      sellersToRenderOrdered.sort((a, b) => {
         return b?.posts?.length - a?.posts.length
       })
     }
     if (value === "less-matches") {
-      sellersOrdered.sort((a, b) => {
-        const allMatchesCopy = structuredClone(allMatches || [])
-        const aMatches = allMatchesCopy.filter(m => m?.buyerPost === a?._id.toString())
-        const bMatches = allMatchesCopy.filter(m => m?.buyerPost === b?._id.toString())
+      sellersToRenderOrdered.sort((a, b) => {
+        const aMatchedPostsLength = [...(allMatches || [])].filter(m => m?.sellerPost && a?.posts?.includes(m?.sellerPost)).length
+        const bMatchedPostsLength = [...(allMatches || [])].filter(m => m?.sellerPost && b?.posts?.includes(m?.sellerPost)).length
 
-        return aMatches?.length - bMatches?.length
+        return aMatchedPostsLength - bMatchedPostsLength
       })
     }
     if (value === "more-matches") {
-      sellersOrdered.sort((a, b) => {
-        const allMatchesCopy = structuredClone(allMatches || [])
-        const aMatches = allMatchesCopy.filter(m => m?.buyerPost === a?._id.toString())
-        const bMatches = allMatchesCopy.filter(m => m?.buyerPost === b?._id.toString())
+      sellersToRenderOrdered.sort((a, b) => {
+        const aMatchedPostsLength = [...(allMatches || [])].filter(m => m?.sellerPost && a?.posts?.includes(m?.sellerPost)).length
+        const bMatchedPostsLength = [...(allMatches || [])].filter(m => m?.sellerPost && b?.posts?.includes(m?.sellerPost)).length
 
-        return bMatches?.length - aMatches?.length
+        return bMatchedPostsLength - aMatchedPostsLength
       })
     }
     if (value === "oldest") {
-      sellersOrdered.sort((a, b) => {
+      sellersToRenderOrdered.sort((a, b) => {
         return parseDate(a.created_at).getTime() - parseDate(b.created_at).getTime()
       })
     }
     if (value === "newest") {
-      sellersOrdered.sort((a, b) => {
+      sellersToRenderOrdered.sort((a, b) => {
         return parseDate(b.created_at).getTime() - parseDate(a.created_at).getTime()
       })
     }
     if (value === "active") {
-      sellersOrdered.sort((a, b) => {
+      sellersToRenderOrdered.sort((a, b) => {
         return a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
       })
     }
     if (value === "deactive") {
-      sellersOrdered.sort((a, b) => {
+      sellersToRenderOrdered.sort((a, b) => {
         return a.is_active === b.is_active ? 0 : a.is_active ? 1 : -1
       })
     }
-    if (value === "disable") {
-      sellersOrdered.sort((a, b) => {
-        return a.disable === b.disable ? 0 : a.disable ? -1 : 1
+    if (value === "disabled") {
+      sellersToRenderOrdered.sort((a, b) => {
+        return a.disabled === b.disabled ? 0 : a.disabled ? -1 : 1
       })
     }
-    if (value === "enable") {
-      sellersOrdered.sort((a, b) => {
-        return a.disable === b.disable ? 0 : a.disable ? 1 : -1
+    if (value === "enabled") {
+      sellersToRenderOrdered.sort((a, b) => {
+        return a.disabled === b.disabled ? 0 : a.disabled ? 1 : -1
       })
     }
-    setSellersToRender(sellersOrdered)
+    setSellersToRender(sellersToRenderOrdered)
   }
   // console.log(orderBy)
 
@@ -197,7 +256,7 @@ export default function SellersDashboard() {
                       ID
                     </div>
                     {
-                      isFilteringByName
+                      sellersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -226,11 +285,12 @@ export default function SellersDashboard() {
                       <div className="w-[200px]">
                         <SellersInput
                           handleFilter={handleFilterByName}
+                          sellerNames={filteredSellerNames}
                         />
                       </div>
                     </div>
                     {
-                      isFilteringByName
+                      sellersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -259,7 +319,7 @@ export default function SellersDashboard() {
                       Catergories
                     </div>
                     {
-                      isFilteringByName
+                      sellersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -288,7 +348,7 @@ export default function SellersDashboard() {
                       Posts
                     </div>
                     {
-                      isFilteringByName
+                      sellersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -317,7 +377,7 @@ export default function SellersDashboard() {
                       Matches
                     </div>
                     {
-                      isFilteringByName
+                      sellersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -343,10 +403,26 @@ export default function SellersDashboard() {
                 <th className="py-1 px-2">
                   <div className="flex">
                     <div className="px-1 flex items-center">
-                      Active?
+                      <select
+                        name="is_active"
+                        id=""
+                        onChange={(e) => handleFilterSellersByBooleans(e)}
+                        className="w-[100px]"
+                        value={sellersFilterBy?.is_active}
+                      >
+                        <option value="all">
+                          All
+                        </option>
+                        <option value="active">
+                          Active
+                        </option>
+                        <option value="deactive">
+                          Deactive
+                        </option>
+                      </select>
                     </div>
                     {
-                      isFilteringByName
+                      sellersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -372,15 +448,31 @@ export default function SellersDashboard() {
                 <th className="py-1 px-2">
                   <div className="flex">
                     <div className="px-1 flex items-center">
-                      Disable?
+                      <select
+                        name="disabled"
+                        id=""
+                        onChange={(e) => handleFilterSellersByBooleans(e)}
+                        className="w-[100px]"
+                        value={sellersFilterBy?.disabled}
+                      >
+                        <option value="all">
+                          All
+                        </option>
+                        <option value="enabled">
+                          Enabled
+                        </option>
+                        <option value="disabled">
+                          Disabled
+                        </option>
+                      </select>
                     </div>
                     {
-                      isFilteringByName
+                      sellersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleOrderBy("disable")}
+                              onClick={() => handleOrderBy("disabled")}
                               className="text-[10px]"
                             >
                               <IconArrowNarrowDown className="w-[20px] " />
@@ -388,7 +480,7 @@ export default function SellersDashboard() {
                           </div>
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleOrderBy("enable")}
+                              onClick={() => handleOrderBy("enabled")}
                               className="text-[10px]"
                             >
                               <IconArrowNarrowUp className="w-[20px] " />
@@ -404,7 +496,7 @@ export default function SellersDashboard() {
                       Created
                     </div>
                     {
-                      isFilteringByName
+                      sellersToRender?.length <= 1
                         ? ""
                         : <div className="flex">
                           <div className="flex items-center">

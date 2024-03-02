@@ -176,7 +176,7 @@ export default function SellerByIdPage() {
               <div className="flex flex-wrap justify-between h-fit">
                 <div className="flex gap-4">
                   <div className="text-[15px]">
-                    {singleSellerToShow?.disable ? "Disable" : "Enable"}
+                    {singleSellerToShow?.disabled ? "Disabled" : "Enabled"}
                   </div>
                   <div className="text-[15px]">
                     {singleSellerToShow?.is_active ? "Active" : "Inactive"}

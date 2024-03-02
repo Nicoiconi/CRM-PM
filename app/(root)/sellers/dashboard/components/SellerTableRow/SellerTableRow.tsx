@@ -15,13 +15,11 @@ interface SellerToRender {
   matches: number
   description: string
   is_active: string
-  disable: string
+  disabled: string
   created_at: string
 }
 
 export default function SellerTableRow({ seller }: Props) {
-
-  const dispatch = useDispatch()
 
   const { allMatches }: { allMatches: Match[] } = useSelector((state: Store) => state.matches)
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
@@ -48,12 +46,12 @@ export default function SellerTableRow({ seller }: Props) {
       posts: seller?.posts?.length,
       matches: sellerMatches.length,
       description: seller?.description || "",
-      is_active: seller?.is_active?.toString(),
-      disable: seller?.disable?.toString(),
+      is_active: seller?.is_active ? "Active" : "Deactive",
+      disabled: seller?.disabled ? "Disabled" : "Enabled",
       created_at: seller?.created_at
 
     })
-  }, [seller])
+  }, [allCategories, allMatches, seller])
 
   return (
     <tr className="border text-[20px]">
@@ -83,7 +81,7 @@ export default function SellerTableRow({ seller }: Props) {
         {sellerData?.is_active}
       </td>
       <td className="py-1 px-2">
-        {sellerData?.disable}
+        {sellerData?.disabled}
       </td>
       <td className="py-1 px-2">
         {sellerData?.created_at}

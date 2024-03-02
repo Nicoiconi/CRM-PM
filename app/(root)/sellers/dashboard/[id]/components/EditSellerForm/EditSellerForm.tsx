@@ -114,7 +114,7 @@ export default function EditSellerForm({ setEnableEdit }: Props) {
           disabled={
             (!newSellerData?.name || newSellerData?.name === singleSeller?.name) &&
             (!newSellerData?.description || newSellerData?.description === singleSeller?.description) &&
-            (!newSellerData?.disable || newSellerData?.disable === singleSeller?.disable) &&
+            (!newSellerData?.disabled || newSellerData?.disabled === singleSeller?.disabled) &&
             (!newSellerData?.is_active || newSellerData?.is_active === singleSeller?.is_active)
           }
         >
@@ -173,14 +173,14 @@ export default function EditSellerForm({ setEnableEdit }: Props) {
       <div className="py-1">
         <label
           className="pr-3"
-          htmlFor="disable-input"
+          htmlFor="disabled-input"
         >
-          {singleSeller?.disable ? "Enable?" : "Disable?"}
+          {singleSeller?.disabled ? "Enabled?" : "Disabled?"}
         </label>
         <input
-          id="disable-input"
+          id="disabled-input"
           type="checkbox"
-          name="disable"
+          name="disabled"
           onChange={(e) => handleEditBooleansSeller(e)}
         />
       </div>
