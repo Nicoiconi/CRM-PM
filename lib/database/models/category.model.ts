@@ -11,7 +11,7 @@ const CategorySchema = new Schema({
     unique: true
   },
   description: String,
-  disable: {
+  disabled: {
     type: Boolean,
     default: false
   },

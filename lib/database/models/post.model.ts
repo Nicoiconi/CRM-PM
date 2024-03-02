@@ -21,7 +21,7 @@ const PostSchema = new Schema({
     type: Number
   },
   description: String,
-  disable: {
+  disabled: {
     type: Boolean,
     default: false
   },

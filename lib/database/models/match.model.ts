@@ -23,7 +23,7 @@ const MatchSchema = new Schema({
   },
   profit: Number,
   description: String,
-  disable: {
+  disabled: {
     type: Boolean,
     default: false
   },

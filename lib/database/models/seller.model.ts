@@ -19,7 +19,7 @@ const SellerSchema = new Schema({
   description: String,
   email: String,
   phone: String,
-  disable: {
+  disabled: {
     type: Boolean,
     default: false
   },
