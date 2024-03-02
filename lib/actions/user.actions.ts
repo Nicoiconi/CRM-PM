@@ -4,15 +4,47 @@ import { revalidatePath } from "next/cache"
 import User from "../database/models/user.model"
 import { connectToDatabase } from "../database/mongoose"
 import { handleError } from "../utils"
+import { auth } from "@clerk/nextjs"
+import { redirect } from "next/navigation"
 
 // CREATE
 export async function createUser(user: CreateUserParams) {
   try {
     await connectToDatabase()
 
-    const newUser = await User.create(user)
+    const { userId } = auth()
+    if (!userId) redirect("/sign-in")
 
-    return JSON.parse(JSON.stringify(newUser))
+    // const user = await User.findOne({ clerkId: userId })
+
+    // if (!user) return { message: "Unauthorized.", status: 401, object: null }
+
+    const nuevaFecha = new Date()
+
+    const dateFormat: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    }
+
+    const hourFormat: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    }
+
+    const formattedDate = nuevaFecha.toLocaleDateString("en-GB", dateFormat)
+    const formattedHour = nuevaFecha.toLocaleTimeString("en-GB", hourFormat)
+
+    const newUser = await User.create({
+      ...user,
+      created_at: `${formattedDate} ${formattedHour}`,
+      clerkId: userId
+    })
+
+    if (!newUser) return { message: `User create failed.`, status: 409, object: null }
+
+    return { message: `User ${newUser?.name} created`, status: 201, object: JSON.parse(JSON.stringify(newUser)) }
   } catch (error: any) {
     // handleError(error)
     console.log(error.message)
@@ -20,15 +52,15 @@ export async function createUser(user: CreateUserParams) {
 }
 
 // READ
-export async function getAllUsers(userId: string) {
+export async function getAllUsers() {
   try {
     await connectToDatabase()
 
-    const user = await User.find()
+    const allUsers = await User.find()
 
-    if (!user) throw new Error("User not found")
+    if (!allUsers) return { message: "Users not found", status: 404, object: null }
 
-    return JSON.parse(JSON.stringify(user))
+    return { message: `${allUsers?.length} users found`, status: 200, object: JSON.parse(JSON.stringify(allUsers)) }
   } catch (error: any) {
     // handleError(error)
     console.log(error.message)
@@ -39,11 +71,26 @@ export async function getUserById(userId: string) {
   try {
     await connectToDatabase()
 
-    const user = await User.findOne({ clerkId: userId })
+    const userById = await User.findById(userId)
 
-    if (!user) throw new Error("User not found")
+    if (!userById) return { message: "User not found.", status: 404, object: null }
 
-    return JSON.parse(JSON.stringify(user))
+    return { message: `Buyer ${userById?.name} found.`, status: 200, object: JSON.parse(JSON.stringify(userById)) }
+  } catch (error: any) {
+    // handleError(error)
+    console.log(error.message)
+  }
+}
+
+export async function getUserBy(clerkId: { clerkId: string }) {
+  try {
+    await connectToDatabase()
+
+    const userBy = await User.findOne(clerkId)
+
+    if (!userBy) return { message: "User not found.", status: 404, object: null }
+
+    return { message: `Buyer ${userBy?.name} found.`, status: 200, object: JSON.parse(JSON.stringify(userBy)) }
   } catch (error: any) {
     // handleError(error)
     console.log(error.message)
@@ -51,13 +98,43 @@ export async function getUserById(userId: string) {
 }
 
 // UPDATE
-export async function updateUser(clerkId: string, user: UpdateUserParams) {
+export async function updateUser(userDBId: string, user: UpdateUserParams) {
   try {
     await connectToDatabase()
 
-    const updatedUser = await User.findOneAndUpdate({ clerkId }, user, {
-      new: true,
-    })
+    const { userId } = auth()
+    if (!userId) redirect("/sign-in")
+
+    // const user = await User.findOne({ clerkId: userId })
+
+    // if (!user) return { message: "Unauthorized.", status: 401, object: null }
+
+    const userToUpdate = await User.findById(userDBId)
+
+    if (!userToUpdate) return { message: "User not found.", status: 404, object: null }
+
+    const nuevaFecha = new Date()
+
+    const dateFormat: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    }
+
+    const hourFormat: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    }
+
+    const formattedDate = nuevaFecha.toLocaleDateString("en-GB", dateFormat)
+    const formattedHour = nuevaFecha.toLocaleTimeString("en-GB", hourFormat)
+
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: userDBId },
+      { ...user, modified_at: `${formattedDate} ${formattedHour}` },
+      { new: true, }
+    )
 
     if (!updatedUser) throw new Error("User update failed")
 
