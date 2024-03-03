@@ -1,10 +1,10 @@
+import { useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+
 import { updateCategory } from "@/lib/actions/category.actions"
 import { setAllCategories, setCategoryById } from "@/lib/redux/slices/categoriesSlice/categoriesSlice"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 import { IconX } from "@tabler/icons-react"
-import e from "express"
-import { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
 
 interface Props {
   posts: CategoryPosts | undefined
@@ -29,6 +29,7 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
   const [nameError, setNameError] = useState(false)
 
   const initialName = newCategoryData?.name !== undefined ? newCategoryData.name : singleCategory?.name || ""
+  const initialDescription = newCategoryData?.description !== undefined ? newCategoryData.description : singleCategory?.description || ""
 
   function handleEditDataCategory(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     const { name, value } = e.target
@@ -38,7 +39,7 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
     }
 
     if (value === singleCategory[name]) {
-      const newCategoryDataCopy = structuredClone(newCategoryData)
+      const newCategoryDataCopy = structuredClone(newCategoryData || {})
       delete newCategoryDataCopy[name]
       setNewCategoryData(newCategoryDataCopy)
     } else {
@@ -107,8 +108,8 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
             Object.keys(newCategoryData).length === 0 || // No changes
             nameError || // Name length less than 3
             (
-              (newCategoryData.name === singleCategory.name) && // Name is equal
-              (newCategoryData.description === singleCategory.description) // Description is equal
+              newCategoryData.name === singleCategory.name && // Name is equal
+              newCategoryData.description === singleCategory.description // Description is equal
             )
           }
         >
@@ -139,20 +140,22 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
           value={initialName}
         />
       </div>
+
       <div className="py-1">
         <label
           className="pr-3"
-          htmlFor="disable-input"
+          htmlFor="disabled-input"
         >
-          {singleCategory?.disable ? "Enable?" : "Disable?"}
+          {singleCategory?.disabled ? "Enabled?" : "Disabled?"}
         </label>
         <input
-          id="disable-input"
+          id="disabled-input"
           type="checkbox"
-          name="disable"
+          name="disabled"
           onChange={(e) => handleEditBooleansCategory(e)}
         />
       </div>
+
       <div className="py-1 flex">
         <div>
           <label
@@ -162,6 +165,7 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
             {singleCategory?.is_active ? "Deactivate?" : "Activate?"}
           </label>
         </div>
+
         <div className="pr-2">
           <input
             id="activate-input"
@@ -175,6 +179,7 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
             }
           />
         </div>
+
         {
           ((posts?.buyers?.posts && (posts?.buyers?.posts?.length > 0) || 0)) ||
             (posts?.sellers?.posts && (posts?.sellers?.posts?.length > 0 || 0))
@@ -184,6 +189,7 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
             : ""
         }
       </div>
+
       <div className="py-1 flex">
         <div>
           <label
@@ -193,6 +199,7 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
             Description
           </label>
         </div>
+
         <textarea
           className="px-1"
           name="description"
@@ -200,8 +207,8 @@ export default function EditCategoryForm({ posts, setEnableEdit }: Props) {
           cols={20}
           rows={3}
           onChange={(e) => handleEditDataCategory(e)}
-          value={newCategoryData?.description || singleCategory?.description || ""}
-        ></textarea>
+          value={initialDescription}
+        />
       </div>
     </form>
   )
