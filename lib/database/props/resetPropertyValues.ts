@@ -46,8 +46,6 @@ function getFormattedDate() {
 
 export async function resetProperyValues({ schema, propertyName, newValue }: Props) {
 
-  console.log(schema, propertyName)
-
   await connectToDatabase()
 
   if (schema === Schemas.Buyer) {
@@ -77,28 +75,28 @@ export async function resetProperyValues({ schema, propertyName, newValue }: Pro
         if (propType === "number") {
           await Buyer.findByIdAndUpdate(
             eachDocument?._id,
-            { $set: { [`${propertyName}`]: newValue || 0 } } // verificar si es válido
+            { $set: { [`${propertyName}`]: 0 } } // verificar si es válido
           )
         }
 
         if (propType === "object") {
           await Buyer.findByIdAndUpdate(
             eachDocument?._id,
-            { $set: { [`${propertyName}`]: newValue || {} } } // verificar si es válido
+            { $set: { [`${propertyName}`]: {} } } // verificar si es válido
           )
         }
 
         if (propType === "string") {
           await Buyer.findByIdAndUpdate(
             eachDocument?._id,
-            { $set: { [`${propertyName}`]: newValue || "" } } // verificar si es válido
+            { $set: { [`${propertyName}`]: "" } } // verificar si es válido
           )
         }
 
         if (propType === "array") {
           await Buyer.findByIdAndUpdate(
             eachDocument?._id,
-            { $set: { [`${propertyName}`]: newValue || [] } } // verificar si es válido
+            { $set: { [`${propertyName}`]: [] } } // verificar si es válido
           )
         }
       }
@@ -112,7 +110,7 @@ export async function resetProperyValues({ schema, propertyName, newValue }: Pro
     for (const eachDocument of allDocuments) {
 
       if (eachDocument[propertyName]) {
-
+        
         let propType: string | boolean = Array.isArray(eachDocument[propertyName]) ? "array" : false
 
         if (!propType && eachDocument[propertyName] !== null) {
