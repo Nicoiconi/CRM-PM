@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { setSellerPostToCompare } from "@/lib/redux/slices/postsSlice/postsSlice"
+import { setBuyerPostToCompare, setSellerPostToCompare } from "@/lib/redux/slices/postsSlice/postsSlice"
 import FilterPostByOwnerInput from "../FilterPostByOwnerInput/FilterPostByOwnerInput"
 
 interface Props {
@@ -19,10 +19,10 @@ export default function ComparePostsList({ posts, categoryFilter, ownerType }: P
   const { allSellers }: { allSellers: Client[] } = useSelector((state: Store) => state.sellers)
   const { allBuyers }: { allBuyers: Client[] } = useSelector((state: Store) => state.buyers)
 
+  const postsToRenderRef = useRef<Post[]>()
   const [postsToRender, setPostsToRender] = useState<Post[]>()
-  const [alphabeticInputChecked, setAlphabeticInputChecked] = useState("")
-  const [amountInputChecked, setAmountInputChecked] = useState("")
-  const [namesToDisplay, setNamesToDisplay] = useState<string[]>()
+  const [orderByChecked, setOrderByChecked] = useState("")
+  const [namesToDisplay, setNamesToDisplay] = useState<string[]>([])
   const [postsByCategory, setPostsByCategory] = useState<Post[]>()
 
   useEffect(() => {
@@ -35,6 +35,7 @@ export default function ComparePostsList({ posts, categoryFilter, ownerType }: P
 
       setPostsByCategory(postsFilsteredByCategory)
       setPostsToRender(postsFilsteredByCategory)
+      postsToRenderRef.current = postsFilsteredByCategory
 
       const uniquePostIds = new Set(postsFilsteredByCategory.map(p => p?.[ownerType as keyof Post]))
       const uniquePostIdsArray = Array.from(uniquePostIds)
@@ -42,26 +43,25 @@ export default function ComparePostsList({ posts, categoryFilter, ownerType }: P
       const postNames: string[] = []
 
       if (ownerType === "seller") {
-        [...(allSellers || [])].map(s => {
-          if (uniquePostIdsArray?.includes(s?._id?.toString())) {
-            postNames.push(s?.name)
+        for (const eachSeller of allSellers) {
+          if (uniquePostIdsArray?.includes(eachSeller?._id?.toString())) {
+            postNames.push(eachSeller?.name)
           }
-        })
+        }
       }
       if (ownerType === "buyer") {
-        [...(allBuyers || [])].map(b => {
-          if (uniquePostIdsArray?.includes(b?._id?.toString())) {
-            postNames.push(b?.name)
+        for (const eachBuyer of allBuyers) {
+          if (uniquePostIdsArray?.includes(eachBuyer?._id?.toString())) {
+            postNames.push(eachBuyer?.name)
           }
-        })
+        }
       }
       const uniqueSortedPostNames = postNames.sort((a, b) => {
         return a?.toLowerCase().localeCompare(b?.toLowerCase())
       })
       setNamesToDisplay(uniqueSortedPostNames)
     }
-    setAlphabeticInputChecked("")
-    setAmountInputChecked("")
+    setOrderByChecked("")
   }, [categoryFilter, ownerType])
 
   function handleSetToCompare(e: React.MouseEvent<HTMLButtonElement>) {
@@ -72,81 +72,93 @@ export default function ComparePostsList({ posts, categoryFilter, ownerType }: P
     }
     if (name === "buyer") {
       const buyerPostToCompare = posts?.find(p => p?._id.toString() === value)
-      dispatch(setSellerPostToCompare(buyerPostToCompare))
+      dispatch(setBuyerPostToCompare(buyerPostToCompare))
     }
   }
 
   function handleOrderBy(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value, checked } = e.target
+    const { value, checked } = e.target
     if (checked) {
       const postsOrdered = [...(postsToRender || [])]
-      if (name === `${ownerType}-alphabetical`) {
-        if (value === "A-Z") {
-          postsOrdered.sort((a, b) => {
-            let postA
-            let postB
-            if (ownerType === "seller") {
-              postA = allSellers?.find(s => s?._id?.toString() === a?.seller)
-              postB = allSellers?.find(s => s?._id?.toString() === b?.seller)
-            }
-            if (ownerType === "buyer") {
-              postA = allBuyers?.find(s => s?._id?.toString() === a?.buyer)
-              postB = allBuyers?.find(s => s?._id?.toString() === b?.buyer)
-            }
-            if (postA && postB) {
-              return postA.name.localeCompare(postB.name) || 0
-            }
-            return 0
-          })
-          setAlphabeticInputChecked(value)
-        }
-        if (value === "Z-A") {
-          postsOrdered.sort((a, b) => {
-            let postA
-            let postB
-            if (ownerType === "seller") {
-              postA = allSellers?.find(s => s?._id?.toString() === a?.seller)
-              postB = allSellers?.find(s => s?._id?.toString() === b?.seller)
-            }
-            if (ownerType === "buyer") {
-              postA = allBuyers?.find(s => s?._id?.toString() === a?.buyer)
-              postB = allBuyers?.find(s => s?._id?.toString() === b?.buyer)
-            }
-            if (postA && postB) {
-              return postB.name.localeCompare(postA.name) || 0
-            }
-            return 0
-          })
-          setAlphabeticInputChecked(value)
-        }
+      setOrderByChecked(value)
+
+      if (value === "A-Z") {
+        postsOrdered.sort((a, b) => {
+          let postA
+          let postB
+          if (ownerType === "seller") {
+            postA = allSellers?.find(s => s?._id?.toString() === a?.seller)
+            postB = allSellers?.find(s => s?._id?.toString() === b?.seller)
+          }
+          if (ownerType === "buyer") {
+            postA = allBuyers?.find(s => s?._id?.toString() === a?.buyer)
+            postB = allBuyers?.find(s => s?._id?.toString() === b?.buyer)
+          }
+          if (postA && postB) {
+            return postA.name.localeCompare(postB.name) || 0
+          }
+          return 0
+        })
       }
-      if (name === `${ownerType}-amount`) {
-        if (value === "Lower") {
-          postsOrdered.sort((a, b) => {
-            return Number(a?.price) - Number(b?.price)
-          })
-          setAmountInputChecked(value)
-        }
-        if (value === "Higher") {
-          postsOrdered.sort((a, b) => {
-            return Number(b?.price) - Number(a?.price)
-          })
-          setAmountInputChecked(value)
-        }
+
+      if (value === "Z-A") {
+        postsOrdered.sort((a, b) => {
+          let postA
+          let postB
+          if (ownerType === "seller") {
+            postA = allSellers?.find(s => s?._id?.toString() === a?.seller)
+            postB = allSellers?.find(s => s?._id?.toString() === b?.seller)
+          }
+          if (ownerType === "buyer") {
+            postA = allBuyers?.find(s => s?._id?.toString() === a?.buyer)
+            postB = allBuyers?.find(s => s?._id?.toString() === b?.buyer)
+          }
+          if (postA && postB) {
+            return postB.name.localeCompare(postA.name) || 0
+          }
+          return 0
+        })
       }
+
+      if (value === "Lower") {
+        postsOrdered.sort((a, b) => {
+          return Number(a?.price) - Number(b?.price)
+        })
+      }
+
+      if (value === "Higher") {
+        postsOrdered.sort((a, b) => {
+          return Number(b?.price) - Number(a?.price)
+        })
+      }
+      // }
       setPostsToRender(postsOrdered)
     }
   }
 
   function handleFilterByName(value: string) {
     if (value) {
-      const categoryForFilter = allCategories?.find(c => c?.name === value)
-      const postsFilsteredByCategory = [...(postsByCategory || [])].filter(p => p?.[ownerType as keyof Post] === categoryForFilter?._id?.toString())
-      setPostsToRender(postsFilsteredByCategory)
+
+      let findOwner: Client | undefined = undefined
+
+      if (ownerType === "seller") {
+        findOwner = allSellers?.find(s => s?.name === value)
+      }
+
+      if (ownerType === "buyer") {
+        findOwner = allBuyers?.find(b => b?.name === value)
+      }
+
+      if (findOwner) {
+        const postsToRenderRefCopy = structuredClone(postsToRenderRef?.current || [])
+
+        const postsFilsteredByCategory = postsToRenderRefCopy?.filter(p => p?.[ownerType as keyof Post] === findOwner?._id?.toString())
+        setPostsToRender(postsFilsteredByCategory)
+      }
+
     } else {
       setPostsToRender([...(postsByCategory || [])])
-      setAlphabeticInputChecked("")
-      setAmountInputChecked("")
+      setOrderByChecked("")
     }
   }
 
@@ -180,11 +192,11 @@ export default function ComparePostsList({ posts, categoryFilter, ownerType }: P
           <div>
             <input
               id={`${ownerType}-alphabetical-order-A-Z`}
-              name={`${ownerType}-alphabetical`}
+              name={`order-by-${ownerType}`}
               type="radio"
               value="A-Z"
               onChange={(e) => handleOrderBy(e)}
-              checked={alphabeticInputChecked === "A-Z"}
+              checked={orderByChecked === "A-Z"}
             />
             <label
               htmlFor={`${ownerType}-alphabetical-order-A-Z`}
@@ -196,11 +208,11 @@ export default function ComparePostsList({ posts, categoryFilter, ownerType }: P
           <div>
             <input
               id={`${ownerType}-alphabetical-order-Z-A`}
-              name={`${ownerType}-alphabetical`}
+              name={`order-by-${ownerType}`}
               type="radio"
               value="Z-A"
               onChange={(e) => handleOrderBy(e)}
-              checked={alphabeticInputChecked === "Z-A"}
+              checked={orderByChecked === "Z-A"}
             />
             <label
               htmlFor={`${ownerType}-alphabetical-order-Z-A`}
@@ -215,11 +227,11 @@ export default function ComparePostsList({ posts, categoryFilter, ownerType }: P
           <div>
             <input
               id={`${ownerType}-amount-order-lower`}
-              name={`${ownerType}-amount`}
+              name={`order-by-${ownerType}`}
               type="radio"
               value="Lower"
               onChange={(e) => handleOrderBy(e)}
-              checked={amountInputChecked === "Lower"}
+              checked={orderByChecked === "Lower"}
             />
             <label
               htmlFor={`${ownerType}-amount-order-lower`}
@@ -231,11 +243,11 @@ export default function ComparePostsList({ posts, categoryFilter, ownerType }: P
           <div>
             <input
               id={`${ownerType}-amount-order-higher`}
-              name={`${ownerType}-amount`}
+              name={`order-by-${ownerType}`}
               type="radio"
               value="Higher"
               onChange={(e) => handleOrderBy(e)}
-              checked={amountInputChecked === "Higher"}
+              checked={orderByChecked === "Higher"}
             />
             <label
               htmlFor={`${ownerType}-amount-order-higher`}

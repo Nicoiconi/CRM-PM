@@ -6,13 +6,13 @@ export default function BuyersLayout({ children }: { children: React.ReactNode }
       <nav className="flex justify-around p-3">
         <div>
           <NavButton
-            path="/buyers/dashboard"
+            path="/matches/dashboard"
             label="Dashboard"
           />
         </div>
         <div>
           <NavButton
-            path="/buyers/add"
+            path="/matches/add"
             label="Add"
           />
         </div>
