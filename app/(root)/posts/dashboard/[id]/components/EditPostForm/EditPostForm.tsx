@@ -25,13 +25,8 @@ export default function EditPostForm({ setEnableEdit }: Props) {
 
   const [postMatches, setPostMatches] = useState(0)
 
-  // const [newPostData, setNewPostData] = useState({
-  //   description: singlePost?.description,
-  //   price: singlePost?.price
-  // })
   const [newPostData, setNewPostData] = useState<ExtendedUpdatePostParams>({})
   const [priceError, setPriceError] = useState(false)
-  console.log(newPostData)
 
   const initialPrice = newPostData?.price !== undefined ? newPostData.price : singlePost?.price || ""
   const initialDescription = newPostData?.description !== undefined ? newPostData.description : singlePost?.description || ""
@@ -62,27 +57,7 @@ export default function EditPostForm({ setEnableEdit }: Props) {
       }))
     }
   }
-  // console.log(post)
-
-  // function handleEditBooleansPost(e: React.ChangeEvent<HTMLInputElement>) {
-  //   const { name, checked } = e.target
-  //   if (checked) {
-  //     setNewPostData(prevState => ({
-  //       ...prevState,
-  //       [name]: !singlePost[name]
-  //     }))
-  //   } else {
-  //     setNewPostData(prevState => {
-  //       const newState: UpdatePostParams = {};
-  //       for (const key in prevState) {
-  //         if (key !== name) {
-  //           newState[key as keyof UpdatePostParams] = prevState[key as keyof UpdatePostParams];
-  //         }
-  //       }
-  //       return newState;
-  //     })
-  //   }
-  // }
+  
   function handleEditBooleansPost(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, checked } = e.target;
     if (checked) {
@@ -113,10 +88,12 @@ export default function EditPostForm({ setEnableEdit }: Props) {
         p?._id?.toString() !== singlePost?._id?.toString()
       )
     })
+
     if (existingPost) {
-      e.preventDefault()
       dispatch(setFooterMessage({ message: "There is already a post with that Buyer, Category and Price", status: 409 }))
+      return
     }
+
     const updatedPost = await updatePost(singlePost?._id, newPostData)
 
     if (updatedPost) {
@@ -139,8 +116,6 @@ export default function EditPostForm({ setEnableEdit }: Props) {
     const newValue = value.replace(/\D/g, "");
     e.target.value = newValue;
   }
-
-  console.log(newPostData)
 
   return (
     <form
@@ -187,7 +162,13 @@ export default function EditPostForm({ setEnableEdit }: Props) {
             value={initialPrice}
             onChange={(e) => handleEditDataPost(e)}
             onInput={handlePriceChange}
+            disabled={allMatches?.find(m => (m?.buyerPost || m?.sellerPost) === singlePost?._id?.toString()) ? true : false}
           />
+          {
+            allMatches?.find(m => (m?.buyerPost || m?.sellerPost) === singlePost?._id?.toString())
+              ? " Cannot change price if already has a match"
+              : ""
+          }
         </div>
       </div>
       <div className="py-1">
