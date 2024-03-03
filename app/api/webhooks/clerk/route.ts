@@ -71,18 +71,17 @@ export async function POST(req: Request) {
     };
 
     const newUser = await createUser(user);
-    console.log(newUser)
 
     // Set public metadata
     if (newUser) {
       await clerkClient.users.updateUserMetadata(id, {
         publicMetadata: {
-          userId: newUser._id,
+          userId: newUser?.object?._id,
         },
       });
     }
 
-    return NextResponse.json({ message: "OK", user: newUser });
+    return NextResponse.json({ message: "OK", user: newUser?.object });
   }
 
   // UPDATE
@@ -98,7 +97,7 @@ export async function POST(req: Request) {
 
     const updatedUser = await updateUser(id, user);
 
-    return NextResponse.json({ message: "OK", user: updatedUser });
+    return NextResponse.json({ message: "OK", user: updatedUser?.object });
   }
 
   // DELETE
@@ -107,7 +106,7 @@ export async function POST(req: Request) {
 
     const deletedUser = await deleteUser(id!);
 
-    return NextResponse.json({ message: "OK", user: deletedUser });
+    return NextResponse.json({ message: "OK" });
   }
 
   console.log(`Webhook with and ID of ${id} and type of ${eventType}`);
