@@ -292,6 +292,14 @@ export default function PostByIdPage() {
     }
   }
 
+  function handleMinMaxValues(e: React.ChangeEvent<HTMLInputElement>) {
+    const { value } = e.target
+    // Replace any non-numeric characters with an empty string
+    const newValue = value.replace(/\D/g, "")
+    // Update the input value with only numeric characters
+    e.target.value = newValue
+  }
+
   return (
     <div className="flex flex-wrap h-full border rounded-t-lg">
       <div className="w-auto min-w-[50%] flex flex-wrap text-[25px] p-3 gap-5">
@@ -363,7 +371,7 @@ export default function PostByIdPage() {
               </div>
 
               <div className="text-[25px]">
-                $ {singlePostToShow?.price?.toLocaleString()}
+                Price: $ {singlePostToShow?.price?.toLocaleString()}
               </div>
 
               <div className="text-[25px]">
@@ -380,26 +388,23 @@ export default function PostByIdPage() {
                     There are no matches for this post
                   </div>
                   : <>
-                    <div className="w-full py-2 text-center items-center flex justify-around flex-wrap">
-                      <div className="w-full flex flex-wrap justify-around">
-                        <div className="w-[250px] px-4 py-2">
+                    <div className="w-full py-2 text-center flex flex-wrap">
+                      <div className="w-full flex flex-col gap-2">
+                        <div className="w-[250px] px-1">
                           {
                             singlePostToShow?.buyer
-                              ? <div className="w-[250px] px-4 py-2">
-                                <SellersInput
-                                  sellerNames={namesToFilter || []}
-                                  handleFilter={handleFilterMatchByName}
-                                />
-                              </div>
-
+                              ? <SellersInput
+                                sellerNames={namesToFilter || []}
+                                handleFilter={handleFilterMatchByName}
+                              />
                               : <BuyersInput
                                 buyerNames={namesToFilter || []}
                                 handleFilter={handleFilterMatchByName}
                               />
                           }
                         </div>
-                        <div className="w-auto flex px-1 items-center flex-wrap justify-around">
-                          <div className="flex py-1">
+                        <div className="w-auto flex px-1">
+                          <div className="flex py-1 w-[150px]">
                             <div className="px-1 flex items-center">
                               <label
                                 htmlFor="min-profit"
@@ -410,15 +415,16 @@ export default function PostByIdPage() {
                             <div className="px-1">
                               <input
                                 name="min"
-                                className="w-[75px] p-1"
+                                className="w-[75px]"
                                 id="min-profit"
-                                type="number"
+                                type="text"
                                 onChange={(e) => filterByRange(e)}
+                                onInput={handleMinMaxValues}
                               />
                             </div>
                           </div>
 
-                          <div className="flex py-1">
+                          <div className="flex py-1 w-[150px]">
                             <div className="px-1 flex items-center">
                               <label
                                 htmlFor="max-profit"
@@ -429,10 +435,11 @@ export default function PostByIdPage() {
                             <div className="px-1">
                               <input
                                 name="MAX"
-                                className="w-[75px] p-1"
+                                className="w-[75px]"
                                 id="max-price"
-                                type="number"
+                                type="text"
                                 onChange={(e) => filterByRange(e)}
+                                onInput={handleMinMaxValues}
                               />
                             </div>
                           </div>
@@ -440,9 +447,8 @@ export default function PostByIdPage() {
                         {/* </div> */}
 
                         {/* <div className="w-auto flex flex-wrap justify-around"> */}
-                        <div className="w-auto flex flex-wrap justify-around py-2">
-
-                          <div className="flex py-1">
+                        <div className="w-auto flex flex-wrap px-1">
+                          <div className="flex py-1 w-[150px]">
                             <div className="flex items-center">
                               <input
                                 onClick={(e) => handleOrderBy(e)}
@@ -462,7 +468,7 @@ export default function PostByIdPage() {
                             </div>
                           </div>
 
-                          <div className="flex py-1">
+                          <div className="flex py-1 w-[150px]">
                             <div className="flex items-center">
                               <input
                                 onClick={(e) => handleOrderBy(e)}
@@ -483,9 +489,8 @@ export default function PostByIdPage() {
                           </div>
                         </div>
 
-                        <div className="w-auto flex flex-wrap justify-around py-2">
-
-                          <div className="flex py-1">
+                        <div className="w-auto flex flex-wrap px-1">
+                          <div className="flex py-1 w-[150px]">
                             <div className="flex items-center">
                               <input
                                 onClick={(e) => handleOrderBy(e)}
@@ -505,7 +510,7 @@ export default function PostByIdPage() {
                             </div>
                           </div>
 
-                          <div className="flex py-1">
+                          <div className="flex py-1 w-[150px]">
                             <div className="flex items-center">
                               <input
                                 onClick={(e) => handleOrderBy(e)}
@@ -529,13 +534,11 @@ export default function PostByIdPage() {
                     </div>
 
                     <div className="h-[200px] overflow-y-auto whitespace-nowrap overflow-x-auto">
-                      <div className="text-[20px] flex flex-col px-2 ">
+                      <div className="text-[20px] flex flex-col">
                         {
                           postMatchesToShow?.length === 0
                             ? "There are no matches with those filters"
                             : postMatchesToShow?.map(p => {
-                              const currentDate = p?.created_at?.slice(4, 10)
-                              const currentHour = p?.created_at?.slice(16, 24)
 
                               const findSellerPost = allPosts?.find(p => p?._id?.toString() === p?._id?.toString())
                               const findSeller = allSellers?.find(s => s?._id?.toString() === findSellerPost?.seller)
@@ -546,15 +549,15 @@ export default function PostByIdPage() {
                               return (
                                 <div
                                   key={p?._id}
-                                  className="px-2"
+                                  className=""
                                 >
                                   {
                                     singlePostToShow?.buyer
                                       ? <div>
-                                        Seller: {findSeller?.name} - $ {findSellerPost?.price} | Profit: $ {p?.profit.toLocaleString()} | {currentDate} {currentHour}
+                                        Seller: {findSeller?.name} - $ {findSellerPost?.price} | Profit: $ {p?.profit.toLocaleString()} | {p?.created_at?.slice(0, 6)}{p?.created_at?.slice(8,10)}
                                       </div>
                                       : <div>
-                                        Buyer: {findBuyer?.name} - $ {findBuyerPost?.price} | Profit: $ {p?.profit.toLocaleString()} | {currentDate} {currentHour}
+                                        Buyer: {findBuyer?.name} - $ {findBuyerPost?.price} | Profit: $ {p?.profit.toLocaleString()} | {p?.created_at?.slice(0, 6)}{p?.created_at?.slice(8,10)}
                                       </div>
                                   }
                                 </div>
@@ -568,7 +571,6 @@ export default function PostByIdPage() {
             </div>
         }
       </div>
-
 
       {
         !enableEdit
