@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 
 import { IconArrowNarrowDown, IconArrowNarrowUp, IconRefresh } from "@tabler/icons-react"
@@ -7,6 +7,13 @@ import { getAllBuyers } from "@/lib/actions/buyer.actions"
 import { setAllBuyers } from "@/lib/redux/slices/buyersSlice/buyersSlice"
 import { setFooterMessage } from "@/lib/redux/slices/footerSlice/footerSlice"
 import BuyersInput from "@/components/shared/BuyersInput/BuyersInput"
+
+interface FilterBy {
+  name?: string
+  is_active?: string
+  disabled?: string
+  [key: string]: string | boolean | undefined
+}
 
 export default function BuyersDashboard() {
 
@@ -17,15 +24,18 @@ export default function BuyersDashboard() {
   const { allCategories }: { allCategories: Category[] } = useSelector((state: Store) => state.categories)
   const { allPosts }: { allPosts: Post[] } = useSelector((state: Store) => state.posts)
 
+  const buyersRef = useRef<Client[]>()
   const [buyersToRender, setBuyersToRender] = useState<Client[]>([])
+  const [filteredBuyerNames, setFilteredBuyerNames] = useState<string[] | undefined>(undefined)
   const [orderPressed, setOrderPressed] = useState("")
-  const [isFilteringByName, setIsFilteringByName] = useState(false)
+  const [buyersFilterBy, setBuyersFilterBy] = useState<FilterBy>()
 
   useEffect(() => {
     const allBuyersCopy = structuredClone(allBuyers || [])
     const orderedBuyers = allBuyersCopy?.sort((a, b) => {
       return a?.name?.toLowerCase().localeCompare(b?.name?.toLowerCase())
     })
+    buyersRef.current = orderedBuyers
     setBuyersToRender(orderedBuyers)
   }, [allBuyers])
 
@@ -33,7 +43,6 @@ export default function BuyersDashboard() {
     const fetchAllBuyers = await getAllBuyers()
     if (fetchAllBuyers) {
       const { message, status, object }: { message: string, status: number, object: Client | null } = fetchAllBuyers
-      console.log(object)
       if (status === 200) {
         dispatch(setAllBuyers(object))
       }
@@ -42,13 +51,13 @@ export default function BuyersDashboard() {
   }
 
   function handleFilterByName(value: string) {
-    if (value) {
-      const buyersFilteredByName = [...(allBuyers || [])].filter(b => b?.name?.toLowerCase().includes(value.toLowerCase()))
-      setBuyersToRender(buyersFilteredByName)
-      setIsFilteringByName(true)
-    } else {
-      setBuyersToRender([...(allBuyers || [])])
-      setIsFilteringByName(false)
+    setBuyersFilterBy(prevState => ({
+      ...prevState,
+      name: value
+    }))
+
+    if (!buyersFilterBy?.disabled && !buyersFilterBy?.is_active) {
+      setFilteredBuyerNames(undefined)
     }
   }
 
@@ -57,29 +66,85 @@ export default function BuyersDashboard() {
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(time));
   }
 
+  function handleFilterSellersByBooleans(e: React.ChangeEvent<HTMLSelectElement>) {
+    const { name, value } = e.target
+    setBuyersFilterBy(prevState => ({
+      ...prevState,
+      [name]: value
+    }))
+  }
+
+  useEffect(() => {
+    let buyersRefCopy = structuredClone(buyersRef?.current || [])
+
+    if (buyersFilterBy?.is_active) {
+      if (buyersFilterBy?.is_active === "active") {
+        buyersRefCopy = buyersRefCopy?.filter(s => s?.is_active)
+      }
+      if (buyersFilterBy?.is_active === "deactive") {
+        buyersRefCopy = buyersRefCopy?.filter(s => !s?.is_active)
+      }
+      if (buyersFilterBy?.is_active === "all") {
+        buyersRefCopy = buyersRefCopy?.filter(s => !s?.is_active || s?.is_active)
+      }
+    }
+
+    if (buyersFilterBy?.disabled) {
+      if (buyersFilterBy?.disabled === "enabled") {
+        buyersRefCopy = buyersRefCopy?.filter(s => !s?.disabled)
+      }
+      if (buyersFilterBy?.disabled === "disabled") {
+        buyersRefCopy = buyersRefCopy?.filter(s => s?.disabled)
+      }
+      if (buyersFilterBy?.disabled === "all") {
+        buyersRefCopy = buyersRefCopy?.filter(s => !s?.disabled || s?.disabled)
+      }
+    }
+
+    if (buyersFilterBy?.name) {
+      buyersRefCopy = buyersRefCopy?.filter(b => buyersFilterBy?.name && b?.name?.toLowerCase().includes(buyersFilterBy?.name?.toLowerCase()))
+    }
+
+    if ((buyersFilterBy?.is_active || buyersFilterBy?.disabled) && !buyersFilterBy?.name) {
+      const sellerNames = []
+      for (const eachSellerRefCopy of buyersRefCopy) {
+        sellerNames?.push(eachSellerRefCopy?.name)
+      }
+      const sellerNamesSorted = sellerNames?.sort((a, b) => a?.localeCompare(b))
+      setFilteredBuyerNames(sellerNamesSorted)
+    }
+
+    setBuyersToRender(buyersRefCopy)
+  }, [buyersFilterBy])
+
   function handleOrderBy(value: string) {
     setOrderPressed(value)
     const buyersOrdered = structuredClone(buyersToRender || [])
+
     if (value === "id-lower") {
       buyersOrdered.sort((a, b) => {
         return a?._id?.toString().toLowerCase().localeCompare(b?._id?.toString().toLowerCase())
       })
     }
+
     if (value === "id-higher") {
       buyersOrdered.sort((a, b) => {
         return b?._id?.toString().toLowerCase().localeCompare(a?._id?.toString().toLowerCase())
       })
     }
+
     if (value === "name-az") {
       buyersOrdered.sort((a, b) => {
         return a?.name?.toString().toLowerCase().localeCompare(b?.name?.toString().toLowerCase())
       })
     }
+
     if (value === "name-za") {
       buyersOrdered.sort((a, b) => {
         return b?.name?.toString().toLowerCase().localeCompare(a?.name?.toString().toLowerCase())
       })
     }
+
     if (value === "categories-lower") {
       buyersOrdered.sort((a, b) => {
         const uniqueCategoryPostsA = new Set(a.posts.map(post => {
@@ -97,6 +162,7 @@ export default function BuyersDashboard() {
         return countUniquePostsA - countUniquePostsB
       })
     }
+
     if (value === "categories-higher") {
       buyersOrdered.sort((a, b) => {
         const uniqueCategoryPostsA = new Set(a.posts.map(post => {
@@ -114,67 +180,74 @@ export default function BuyersDashboard() {
         return countUniquePostsB - countUniquePostsA
       })
     }
+
     if (value === "less-posts") {
       buyersOrdered.sort((a, b) => {
         return a?.posts?.length - b?.posts.length
       })
     }
+
     if (value === "more-posts") {
       buyersOrdered.sort((a, b) => {
         return b?.posts?.length - a?.posts.length
       })
     }
+
     if (value === "less-matches") {
       buyersOrdered.sort((a, b) => {
-        // const aMatches = [...(allMatches || [])].filter(match => a?.matches?.includes(match?._id?.toString()))
-        // const bMatches = [...(allMatches || [])].filter(m => m?.buyerPost?.buyer?._id.toString() === b?._id.toString())
+        const aMatchedPostsLength = [...(allMatches || [])].filter(m => m?.buyerPost && a?.posts?.includes(m?.buyerPost)).length
+        const bMatchedPostsLength = [...(allMatches || [])].filter(m => m?.buyerPost && b?.posts?.includes(m?.buyerPost)).length
 
-        return a?.matches?.length - b?.matches?.length
+        return aMatchedPostsLength - bMatchedPostsLength
       })
     }
+
     if (value === "more-matches") {
       buyersOrdered.sort((a, b) => {
-        // const aMatches = [...(allMatches || [])].filter(m => m?.buyerPost?.buyer?._id.toString() === a?._id.toString())
-        // const bMatches = [...(allMatches || [])].filter(m => m?.buyerPost?.buyer?._id.toString() === b?._id.toString())
+        const aMatchedPostsLength = [...(allMatches || [])].filter(m => m?.buyerPost && a?.posts?.includes(m?.buyerPost)).length
+        const bMatchedPostsLength = [...(allMatches || [])].filter(m => m?.buyerPost && b?.posts?.includes(m?.buyerPost)).length
 
-        return b?.matches?.length - a?.matches?.length
+        return bMatchedPostsLength - aMatchedPostsLength
       })
     }
+
     if (value === "oldest") {
       buyersOrdered.sort((a, b) => {
-        // return new Date(a?.created_at).getTime() - new Date(b?.created_at).getTime()
         return parseDate(a?.created_at).getTime() - parseDate(b?.created_at).getTime()
       })
     }
+
     if (value === "newest") {
       buyersOrdered.sort((a, b) => {
-        // return new Date(b?.created_at).getTime() - new Date(a?.created_at).getTime()
         return parseDate(b?.created_at).getTime() - parseDate(a?.created_at).getTime()
       })
     }
+
     if (value === "active") {
       buyersOrdered.sort((a, b) => {
         return a?.is_active === b?.is_active ? 0 : a?.is_active ? -1 : 1
       })
     }
+
     if (value === "deactive") {
       buyersOrdered.sort((a, b) => {
         return a?.is_active === b?.is_active ? 0 : a?.is_active ? 1 : -1
       })
     }
-    if (value === "disable") {
+
+    if (value === "disabled") {
       buyersOrdered.sort((a, b) => {
-        return a?.disable === b?.disable ? 0 : a?.disable ? -1 : 1
+        return a?.disabled === b?.disabled ? 0 : a?.disabled ? -1 : 1
       })
     }
-    if (value === "enable") {
+
+    if (value === "enabled") {
       buyersOrdered.sort((a, b) => {
-        return a?.disable === b?.disable ? 0 : a?.disable ? 1 : -1
+        return a?.disabled === b?.disabled ? 0 : a?.disabled ? 1 : -1
       })
     }
     setBuyersToRender(buyersOrdered)
   }
-  // console.log(orderBy)
 
   return (
     <div className="w-full h-full">
@@ -198,7 +271,7 @@ export default function BuyersDashboard() {
                       ID
                     </div>
                     {
-                      isFilteringByName
+                      buyersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -227,11 +300,12 @@ export default function BuyersDashboard() {
                       <div className="w-[200px]">
                         <BuyersInput
                           handleFilter={handleFilterByName}
+                          buyerNames={filteredBuyerNames}
                         />
                       </div>
                     </div>
                     {
-                      isFilteringByName
+                      buyersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -260,7 +334,7 @@ export default function BuyersDashboard() {
                       Catergories
                     </div>
                     {
-                      isFilteringByName
+                      buyersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -289,7 +363,7 @@ export default function BuyersDashboard() {
                       Posts
                     </div>
                     {
-                      isFilteringByName
+                      buyersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -318,7 +392,7 @@ export default function BuyersDashboard() {
                       Matches
                     </div>
                     {
-                      isFilteringByName
+                      buyersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -344,10 +418,26 @@ export default function BuyersDashboard() {
                 <th className="py-1 px-2">
                   <div className="flex">
                     <div className="px-1 flex items-center">
-                      Active?
+                      <select
+                        name="is_active"
+                        id=""
+                        onChange={(e) => handleFilterSellersByBooleans(e)}
+                        className="w-[100px]"
+                        value={buyersFilterBy?.is_active}
+                      >
+                        <option value="all">
+                          All
+                        </option>
+                        <option value="active">
+                          Active
+                        </option>
+                        <option value="deactive">
+                          Deactive
+                        </option>
+                      </select>
                     </div>
                     {
-                      isFilteringByName
+                      buyersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
@@ -373,15 +463,31 @@ export default function BuyersDashboard() {
                 <th className="py-1 px-2">
                   <div className="flex">
                     <div className="px-1 flex items-center">
-                      Disable?
+                      <select
+                        name="disabled"
+                        id=""
+                        onChange={(e) => handleFilterSellersByBooleans(e)}
+                        className="w-[100px]"
+                        value={buyersFilterBy?.disabled}
+                      >
+                        <option value="all">
+                          All
+                        </option>
+                        <option value="enabled">
+                          Enabled
+                        </option>
+                        <option value="disabled">
+                          Disabled
+                        </option>
+                      </select>
                     </div>
                     {
-                      isFilteringByName
+                      buyersToRender?.length <= 1
                         ? ""
                         : <div className="flex gap-[5px]">
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleOrderBy("disable")}
+                              onClick={() => handleOrderBy("disabled")}
                               className="text-[10px]"
                             >
                               <IconArrowNarrowDown className="w-[20px] " />
@@ -389,7 +495,7 @@ export default function BuyersDashboard() {
                           </div>
                           <div className="flex items-center">
                             <button
-                              onClick={() => handleOrderBy("enable")}
+                              onClick={() => handleOrderBy("enabled")}
                               className="text-[10px]"
                             >
                               <IconArrowNarrowUp className="w-[20px] " />
@@ -405,7 +511,7 @@ export default function BuyersDashboard() {
                       Created
                     </div>
                     {
-                      isFilteringByName
+                      buyersToRender?.length <= 1
                         ? ""
                         : <div className="flex">
                           <div className="flex items-center">

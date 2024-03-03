@@ -56,40 +56,36 @@ export default function EditBuyerForm({ setEnableEdit }: Props) {
   }
 
   async function handleSubmitEdit(e: React.FormEvent<HTMLFormElement>) {
-    try {
-      e.preventDefault()
-      let existingName
-      let existingEmail
-      if (newBuyerData?.name) {
-        existingName = allBuyers?.find(b => b?.name.toLowerCase().trim() === newBuyerData?.name?.toLowerCase().trim() && b?._id !== singleBuyer?._id)
-        if (existingName) {
-          dispatch(setFooterMessage({ message: `Name ${existingName?.name} already exist.`, status: 409 }))
-          return
-        }
+    e.preventDefault()
+    let existingName
+    let existingEmail
+    if (newBuyerData?.name) {
+      existingName = allBuyers?.find(b => b?.name.toLowerCase().trim() === newBuyerData?.name?.toLowerCase().trim() && b?._id !== singleBuyer?._id)
+      if (existingName) {
+        dispatch(setFooterMessage({ message: `Name ${existingName?.name} already exist.`, status: 409 }))
+        return
       }
-      if (newBuyerData?.email) {
-        existingEmail = allBuyers?.find(b => b?.email.toLowerCase().trim() === newBuyerData?.email?.toLowerCase().trim() && b?._id !== singleBuyer?._id)
-        if (existingEmail) {
-          dispatch(setFooterMessage({ message: `Email ${existingEmail?.email} already exist.`, status: 409 }))
-          return
-        }
+    }
+    if (newBuyerData?.email) {
+      existingEmail = allBuyers?.find(b => b?.email.toLowerCase().trim() === newBuyerData?.email?.toLowerCase().trim() && b?._id !== singleBuyer?._id)
+      if (existingEmail) {
+        dispatch(setFooterMessage({ message: `Email ${existingEmail?.email} already exist.`, status: 409 }))
+        return
       }
-      const updatedBuyer = await updateBuyer(singleBuyer?._id, newBuyerData)
-      if (updatedBuyer) {
-        const { message, status, object } = updatedBuyer
-        if (status === 200) {
-          const allBuyersCopy = structuredClone(allBuyers || [])
-          const removeOldBuyer = allBuyersCopy?.filter(b => b?._id?.toString() !== singleBuyer?._id?.toString())
-          dispatch(setAllBuyers([...removeOldBuyer, object]))
-          dispatch(setBuyerById(object))
-          dispatch(setFooterMessage({ message, status }))
-          setEnableEdit(false)
-        }
-      } else {
-        dispatch(setFooterMessage({ message: "Buyer update failed", status: 409 }))
+    }
+    const updatedBuyer = await updateBuyer(singleBuyer?._id, newBuyerData)
+    if (updatedBuyer) {
+      const { message, status, object } = updatedBuyer
+      if (status === 200) {
+        const allBuyersCopy = structuredClone(allBuyers || [])
+        const removeOldBuyer = allBuyersCopy?.filter(b => b?._id?.toString() !== singleBuyer?._id?.toString())
+        dispatch(setAllBuyers([...removeOldBuyer, object]))
+        dispatch(setBuyerById(object))
+        setEnableEdit(false)
       }
-    } catch (error) {
-      console.log(error)
+      dispatch(setFooterMessage({ message, status }))
+    } else {
+      dispatch(setFooterMessage({ message: "Buyer update failed", status: 409 }))
     }
   }
 
@@ -101,90 +97,40 @@ export default function EditBuyerForm({ setEnableEdit }: Props) {
     e.target.value = newValue
   }
 
-  // console.log(newBuyerData)
-
   return (
     <form
       onSubmit={handleSubmitEdit}
-      className="text-[20px] p-3 w-auto min-w-[50%]"
+      className="text-[20px] p-3 w-full md:w-auto md:min-w-[50%]"
     >
-      <div className="pb-2">
+      <div className="pb-2 flex-center">
         <button
-          className="border py-1 px-2"
+          className="border py-1 px-2 w-[70%]"
           disabled={
             newBuyerData?.name === singleBuyer?.name &&
             newBuyerData?.description === singleBuyer?.description &&
-            !newBuyerData?.disable &&
+            !newBuyerData?.disabled &&
             !newBuyerData?.is_active
-            // (newBuyerData?.description?.trim() === "" && !buyer?.description)
           }
         >
           EDIT
         </button>
       </div>
+
       <div className="py-1">
         <label
           className="pr-3"
-          htmlFor="name-input"
+          htmlFor="disabled-input"
         >
-          Name
+          {singleBuyer?.disabled ? "Enabled?" : "Disabled?"}
         </label>
         <input
-          className="px-1"
-          id="name-input"
-          name="name"
-          type="text"
-          onChange={(e) => handleEditDataBuyer(e)}
-          value={newBuyerData?.name || singleBuyer?.name || ""}
-        />
-      </div>
-      <div className="py-1">
-        <label
-          className="pr-3"
-          htmlFor="name-input"
-        >
-          Email
-        </label>
-        <input
-          className="px-1"
-          id="email-input"
-          name="email"
-          type="text"
-          onChange={(e) => handleEditDataBuyer(e)}
-          value={newBuyerData?.email || singleBuyer?.email || ""}
-        />
-      </div>
-      <div className="py-1">
-        <label
-          className="pr-3"
-          htmlFor="name-input"
-        >
-          Phone
-        </label>
-        <input
-          className="px-1"
-          id="phone-input"
-          name="phone"
-          type="text"
-          onChange={(e) => handleEditDataBuyer(e)}
-          value={newBuyerData?.phone || singleBuyer?.phone || ""}
-          onInput={handlePhoneChange}
-        />
-      </div>
-      <div className="py-1">
-        <label
-          className="pr-3"
-          htmlFor="disable-input"
-        >
-          {singleBuyer?.disable ? "Enable?" : "Disable?"}
-        </label>
-        <input
-          id="disable-input"
+          id="disabled-input"
           type="checkbox"
-          name="disable"
+          name="disabled"
           onChange={(e) => handleEditBooleansBuyer(e)}
         />
       </div>
+
       <div className="py-1 flex">
         <div>
           <label
@@ -213,7 +159,75 @@ export default function EditBuyerForm({ setEnableEdit }: Props) {
           }
         </div>
       </div>
-      <div className="py-1 flex">
+
+      <div className="py-1 flex flex-wrap">
+        <div className="w-[90px]">
+          <label
+            className=""
+            htmlFor="name-input"
+          >
+            Name
+          </label>
+        </div>
+
+        <div className="w-[70%]">
+          <input
+            className="rounded px-1 w-full"
+            id="name-input"
+            name="name"
+            type="text"
+            onChange={(e) => handleEditDataBuyer(e)}
+            value={newBuyerData?.name || singleBuyer?.name || ""}
+          />
+        </div>
+      </div>
+
+      <div className="py-1 flex flex-wrap">
+        <div className="w-[90px]">
+          <label
+            className="pr-3 w-[90px]"
+            htmlFor="name-input"
+          >
+            Email
+          </label>
+        </div>
+
+        <div className="w-[70%]">
+          <input
+            className="rounded px-1 w-full"
+            id="email-input"
+            name="email"
+            type="text"
+            onChange={(e) => handleEditDataBuyer(e)}
+            value={newBuyerData?.email || singleBuyer?.email || ""}
+          />
+        </div>
+      </div>
+
+      <div className="py-1 flex flex-wrap">
+        <div className="w-[90px]">
+          <label
+            className="pr-3 w-[90px]"
+            htmlFor="name-input"
+          >
+            Phone
+          </label>
+        </div>
+
+        <div className="w-[70%]">
+          <input
+            className="rounded px-1 w-full"
+            id="phone-input"
+            name="phone"
+            type="text"
+            onChange={(e) => handleEditDataBuyer(e)}
+            value={newBuyerData?.phone || singleBuyer?.phone || ""}
+            onInput={handlePhoneChange}
+          />
+        </div>
+      </div>
+
+      <div className="py-1 flex flex-wrap">
         <div>
           <label
             className="pr-3"
@@ -223,7 +237,7 @@ export default function EditBuyerForm({ setEnableEdit }: Props) {
           </label>
         </div>
         <textarea
-          className="px-1"
+          className="w-full px-1 rounded"
           name="description"
           id="description-input"
           cols={20}

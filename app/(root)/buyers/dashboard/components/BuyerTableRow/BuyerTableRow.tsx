@@ -49,7 +49,6 @@ export default function BuyerTableRow({ buyer }: Props) {
       is_active: buyer?.is_active ? "Active" : "Deactive",
       disabled: buyer?.disabled ? "Disabled" : "Enabled",
       created_at: buyer?.created_at
-
     })
   }, [allCategories, allMatches, buyer])
 
