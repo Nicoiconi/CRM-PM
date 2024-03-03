@@ -143,9 +143,6 @@ declare type CreateMatchParams = {
 
 declare type UpdateMatchParams = {
   status?: string
-  buyerPost?: string
-  sellerPost?: string
-  category?: string
   description?: string
   disabled?: boolean
   is_active?: boolean
