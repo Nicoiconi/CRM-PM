@@ -7,6 +7,26 @@ import { handleError } from "../utils"
 import { auth } from "@clerk/nextjs"
 import { redirect } from "next/navigation"
 
+
+export async function getUserByClerkId() {
+  try {
+    const { userId } = auth()
+
+    if (userId) {
+
+      await connectToDatabase()
+
+      const userByClerkId = await User.findOne({ clerkId: userId })
+
+      if (!userByClerkId) return { message: `Get user failed.`, status: 409, object: null }
+
+      return { message: `Hi ${userByClerkId?.name}! Have a nice day!`, status: 200, object: JSON.parse(JSON.stringify(userByClerkId)) }
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 // CREATE
 export async function createUser(user: CreateUserParams) {
   try {
