@@ -49,17 +49,26 @@ export default function MobileNav() {
             <SheetContent className="sheet-content w-auto">
               <>
                 <div>
-                  <div>
-                    Niconics
-                  </div>
-                  <div>
-                    Potential Matches
-                  </div>
+                  <Link href="/" >
+                    <div>
+                      Niconics
+                    </div>
+                    <div>
+                      Potential Matches
+                    </div>
+                  </Link>
                 </div>
 
                 <div className="flex flex-col gap-[60px]">
                   {/* <ul className="header-nav_elements"> */}
                   <div className="sidebar-nav_elements pt-[50px]">
+                    <Link
+                      href="/"
+                      className={`sidebar-nav_element p-2 ${pathname === "/" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                    >
+                      Home
+                    </Link>
+
                     <Link
                       href="/sellers/dashboard"
                       className={`sidebar-nav_element p-2 ${pathname === "sellers" ? "bg-purple-gradient text-white" : "text-gray-700"}`}

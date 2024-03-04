@@ -35,6 +35,13 @@ export default function SideBar() {
             <ul className="header-nav_elements">
               <div className="sidebar-nav_elements">
                 <Link
+                  href="/"
+                  className={`sidebar-nav_element p-2 ${pathname === "/" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
+                >
+                  Home
+                </Link>
+
+                <Link
                   href="/sellers/dashboard"
                   className={`sidebar-nav_element p-2 ${pathname === "sellers" ? "bg-purple-gradient text-white" : "text-gray-700"}`}
                 >
