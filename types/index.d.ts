@@ -210,6 +210,7 @@ declare type UsersSlice = {
   allUsers: User[]
   singleUser: User
   ultimoUsuarioCreado: User
+  loggedInUser: User
 }
 
 declare type FooterMessage = {
