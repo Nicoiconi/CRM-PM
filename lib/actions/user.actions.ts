@@ -12,13 +12,6 @@ export async function createUser(user: CreateUserParams) {
   try {
     await connectToDatabase()
 
-    const { userId } = auth()
-    if (!userId) redirect("/sign-in")
-
-    // const user = await User.findOne({ clerkId: userId })
-
-    // if (!user) return { message: "Unauthorized.", status: 401, object: null }
-
     const nuevaFecha = new Date()
 
     const dateFormat: Intl.DateTimeFormatOptions = {
@@ -38,8 +31,7 @@ export async function createUser(user: CreateUserParams) {
 
     const newUser = await User.create({
       ...user,
-      created_at: `${formattedDate} ${formattedHour}`,
-      clerkId: userId
+      created_at: `${formattedDate} ${formattedHour}`
     })
 
     if (!newUser) return { message: `User create failed.`, status: 409, object: null }
